@@ -1,0 +1,284 @@
+.modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
+  animation: slideUp 0.3s;
+  overflow: hidden !important;
+  position: relative !important;
+  z-index: 100000 !important;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.hotel-transfer-modal {
+  width: 90%;
+  max-width: 1200px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.hotel-transfer-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 2px solid #e0e0e0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.hotel-transfer-modal .modal-header h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.hotel-transfer-modal .close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 32px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.hotel-transfer-modal .close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.hotel-transfer-modal .modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.transfer-info {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.transfer-info p {
+  margin: 5px 0;
+  color: #666;
+}
+
+.amount-to-transfer {
+  font-size: 20px;
+  color: #2c3e50;
+}
+
+.amount-to-transfer strong {
+  color: #27ae60;
+  font-size: 24px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 18px;
+}
+
+.rooms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.room-card {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.room-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border-color: #667eea;
+}
+
+.room-card.has-meal-plan {
+  border-color: #f39c12;
+  background: #fffaf0;
+}
+
+.room-card.has-meal-plan:hover {
+  border-color: #e67e22;
+}
+
+.room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.room-number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.room-type {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.room-type.simple {
+  background: #3498db;
+  color: white;
+}
+
+.room-type.suite {
+  background: #f39c12;
+  color: white;
+}
+
+.guest-name {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #34495e;
+}
+
+.meal-plan {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.meal-plan.gray {
+  background: #ecf0f1;
+  color: #7f8c8d;
+}
+
+.meal-plan.green {
+  background: #d4edda;
+  color: #155724;
+}
+
+.meal-plan.orange {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.meal-warning {
+  background: #fff3cd;
+  border-left: 4px solid #f39c12;
+  padding: 8px;
+  margin: 10px 0;
+  font-size: 13px;
+  color: #856404;
+  border-radius: 4px;
+}
+
+.room-charges {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-top: 1px solid #e0e0e0;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #666;
+}
+
+.room-charges strong {
+  color: #27ae60;
+  font-size: 16px;
+}
+
+.stay-dates {
+  font-size: 12px;
+  color: #95a5a6;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 2px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-cancel {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  border: 2px solid #e74c3c;
+  background: white;
+  color: #e74c3c;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-cancel:hover {
+  background: #e74c3c;
+  color: white;
+}

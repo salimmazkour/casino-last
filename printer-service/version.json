@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "releaseDate": "2025-10-25",
+  "changelog": [
+    "Version initiale avec support d'impression",
+    "Mapping configurable des imprimantes",
+    "Support PDF via PDFtoPrinter"
+  ]
+}

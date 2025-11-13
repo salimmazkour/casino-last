@@ -1,0 +1,167 @@
+/* Global Responsive Utilities */
+
+/* Tables Responsive */
+@media screen and (max-width: 1366px) {
+  table {
+    font-size: 0.9rem;
+  }
+
+  th, td {
+    padding: 0.6rem !important;
+  }
+}
+
+@media screen and (max-width: 1024px) {
+  .products-table-container,
+  .categories-table-container,
+  .storage-table-container,
+  .inventory-table-container,
+  .clients-table-container,
+  .users-table-container,
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    min-width: 800px;
+  }
+
+  .actions {
+    display: flex;
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  table {
+    font-size: 0.75rem;
+    min-width: 100%;
+  }
+
+  th, td {
+    padding: 0.4rem !important;
+    font-size: 12px;
+  }
+
+  .actions {
+    min-width: 90px;
+  }
+
+  .btn-icon {
+    font-size: 14px;
+    padding: 4px 6px;
+  }
+}
+
+/* Buttons Responsive */
+@media screen and (max-width: 1024px) {
+  .btn-primary, .btn-secondary, button {
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .btn-primary, .btn-secondary, button {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.8rem;
+  }
+}
+
+/* Forms Responsive */
+@media screen and (max-width: 1024px) {
+  input, select, textarea {
+    font-size: 0.9rem;
+    padding: 0.6rem;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 0.8rem;
+    padding: 0.5rem;
+  }
+}
+
+/* Modal Responsive */
+@media screen and (max-width: 1366px) {
+  .modal, .modal-container {
+    max-width: 90%;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .modal, .modal-container {
+    max-width: 95%;
+    margin: 1rem;
+  }
+
+  .modal-header h2, .modal-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+}
+
+/* Grid Layouts Responsive */
+@media screen and (max-width: 1366px) {
+  .stats-grid, .points-grid, .types-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+    gap: 1rem !important;
+  }
+}
+
+@media screen and (max-width: 1024px) {
+  .stats-grid, .points-grid, .types-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .stats-grid, .points-grid, .types-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Page Headers Responsive */
+@media screen and (max-width: 1024px) {
+  .page-header, .products-header, .categories-header, .types-header {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 1rem;
+  }
+
+  .page-header button, .products-header button {
+    width: 100%;
+  }
+}
+
+/* Search and Filter Bars */
+@media screen and (max-width: 1024px) {
+  .filters, .search-filters, .product-filters {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .filters input, .filters select,
+  .search-filters input, .search-filters select {
+    width: 100% !important;
+  }
+}
+
+/* Cards Responsive */
+@media screen and (max-width: 1024px) {
+  .card, .stat-card, .point-card, .type-card {
+    padding: 1rem !important;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .card, .stat-card, .point-card, .type-card {
+    padding: 0.8rem !important;
+  }
+}
