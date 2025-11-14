@@ -121,11 +121,11 @@ const PrintTemplates = () => {
         const { data, error } = await supabase
           .from('print_templates')
           .insert([dataToSave])
-          .select()
-          .single();
+          .select();
 
         if (error) throw error;
-        templateId = data.id;
+        if (!data || data.length === 0) throw new Error('Aucune donnée retournée après insertion');
+        templateId = data[0].id;
       }
 
       if (selectedCategories.length > 0) {
@@ -145,7 +145,7 @@ const PrintTemplates = () => {
       setShowModal(false);
       setEditingTemplate(null);
       resetForm();
-      loadData();
+      await loadData();
     } catch (error) {
       console.error('Erreur sauvegarde:', error);
       alert('Erreur lors de la sauvegarde: ' + error.message);
@@ -355,10 +355,6 @@ const PrintTemplates = () => {
             <div className="modal-header">
               <h3>{editingTemplate ? 'Modifier le modèle' : 'Nouveau modèle d\'impression'}</h3>
               <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
-            </div>
-
-            <div style={{background: 'yellow', padding: '10px', margin: '10px', textAlign: 'center', fontWeight: 'bold', color: 'black'}}>
-              🔧 VERSION DEBUG ACTIVÉE - Code mis à jour !
             </div>
 
             <form onSubmit={handleSubmit}>
