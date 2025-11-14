@@ -45,7 +45,11 @@ const PrintTemplates = () => {
           .from('print_templates')
           .select(`
             *,
-            printer_definitions (name, sales_point_id, sales_points(name)),
+            printer_definitions (
+              name,
+              sales_point_id,
+              sales_points (name)
+            ),
             print_template_categories (
               category_id,
               product_categories (id, name, icon)
@@ -62,6 +66,13 @@ const PrintTemplates = () => {
           .select('id, name, icon, description')
           .order('name')
       ]);
+
+      console.log('📥 Templates loaded:', templatesRes.data);
+      console.log('📥 Templates error:', templatesRes.error);
+
+      if (templatesRes.error) {
+        console.error('❌ Error loading templates:', templatesRes.error);
+      }
 
       if (templatesRes.data) setTemplates(templatesRes.data);
       if (printersRes.data) setPrinterDefinitions(printersRes.data);
