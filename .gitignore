@@ -1,0 +1,13 @@
+# Dépendances et runtime locaux
+node_modules/
+node_runtime/
+
+# Dossier de sortie Inno Setup
+Output/
+
+# Binaire compilé
+ERP-Casino.exe
+
+# Logs locaux
+*.log
+auto-sync.log

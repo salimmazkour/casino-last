@@ -12,5 +12,5 @@ echo NE FERMEZ PAS CETTE FENETRE !
 echo.
 echo ========================================
 echo.
-node server.js
+..\node_runtime\node.exe server.js
 pause
