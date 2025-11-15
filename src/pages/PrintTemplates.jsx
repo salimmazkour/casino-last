@@ -393,24 +393,6 @@ const PrintTemplates = () => {
                 </div>
               </div>
 
-              {template.template_type === 'fabrication' && (
-                <div className="template-categories">
-                  <strong>Catégories associées:</strong>
-                  <div className="categories-list">
-                    {template.print_template_categories?.length > 0 ? (
-                      template.print_template_categories.map(ptc => (
-                        ptc.product_categories && (
-                          <span key={ptc.category_id} className="category-badge">
-                            {ptc.product_categories.icon} {ptc.product_categories.name}
-                          </span>
-                        )
-                      ))
-                    ) : (
-                      <span className="no-categories">Aucune catégorie</span>
-                    )}
-                  </div>
-                </div>
-              )}
 
               <div className="template-actions">
                 <button
