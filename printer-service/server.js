@@ -225,6 +225,22 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
 
     doc.pipe(stream);
 
+    if (templateContent.showLogo && templateContent.logoUrl) {
+      try {
+        if (templateContent.logoUrl.startsWith('data:image')) {
+          const base64Data = templateContent.logoUrl.split(',')[1];
+          const buffer = Buffer.from(base64Data, 'base64');
+          doc.image(buffer, {
+            fit: [80, 80],
+            align: 'center'
+          });
+          doc.moveDown();
+        }
+      } catch (logoError) {
+        console.error('⚠️ Erreur chargement logo:', logoError.message);
+      }
+    }
+
     if (templateContent.header) {
       const headerStyle = templateContent.textStyles?.header || { bold: true, size: 12, align: 'center' };
       const headerLines = templateContent.header.split('\n');
@@ -256,6 +272,10 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
 
     if (templateContent.showTable !== false && orderData.table_name) {
       doc.fontSize(9).text(`Table: ${orderData.table_name}`);
+    }
+
+    if (templateContent.showClientName && orderData.client_name) {
+      doc.fontSize(9).text(`Client: ${orderData.client_name}`);
     }
 
     doc.moveDown(0.5);
