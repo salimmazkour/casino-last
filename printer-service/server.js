@@ -230,9 +230,10 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
         if (templateContent.logoUrl.startsWith('data:image')) {
           const base64Data = templateContent.logoUrl.split(',')[1];
           const buffer = Buffer.from(base64Data, 'base64');
+          const logoAlign = templateContent.logoAlign || 'center';
           doc.image(buffer, {
             fit: [80, 80],
-            align: 'center'
+            align: logoAlign
           });
           doc.moveDown();
         }

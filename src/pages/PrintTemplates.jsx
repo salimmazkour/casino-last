@@ -25,6 +25,7 @@ const PrintTemplates = () => {
       footer: '',
       showLogo: false,
       logoUrl: '',
+      logoAlign: 'center',
       showDate: true,
       showTable: true,
       showOrderNumber: true,
@@ -193,6 +194,7 @@ const PrintTemplates = () => {
       footer: '',
       showLogo: false,
       logoUrl: '',
+      logoAlign: 'center',
       showDate: true,
       showTable: true,
       showOrderNumber: true,
@@ -518,7 +520,7 @@ const PrintTemplates = () => {
                       }
                     }}
                   />
-                  <small>Sélectionnez une image locale pour le logo (sera convertie en base64)</small>
+                  <small>Format PNG/JPG recommandé (évitez les fichiers .ico)</small>
                   {formData.template_content.logoUrl && (
                     <div style={{marginTop: '10px'}}>
                       <img src={formData.template_content.logoUrl} alt="Logo preview" style={{maxWidth: '100px', maxHeight: '100px'}} />
@@ -538,6 +540,18 @@ const PrintTemplates = () => {
                       </button>
                     </div>
                   )}
+                </div>
+
+                <div className="form-group">
+                  <label>Position du logo</label>
+                  <select
+                    value={formData.template_content.logoAlign || 'center'}
+                    onChange={e => setFormData({...formData, template_content: {...formData.template_content, logoAlign: e.target.value}})}
+                  >
+                    <option value="left">Gauche</option>
+                    <option value="center">Centre</option>
+                    <option value="right">Droite</option>
+                  </select>
                 </div>
 
                 <div className="form-row">
@@ -568,16 +582,6 @@ const PrintTemplates = () => {
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Logo d'entreprise (optionnel)</label>
-                  <input
-                    type="text"
-                    value={formData.template_content.logoUrl || ''}
-                    onChange={e => setFormData({...formData, template_content: {...formData.template_content, logoUrl: e.target.value}})}
-                    placeholder="URL du logo (ex: https://example.com/logo.png)"
-                  />
-                  <small>URL du logo à afficher en haut du ticket (format PNG/JPG recommandé)</small>
-                </div>
 
                 <div className="form-group">
                   <label>En-tête personnalisé</label>
@@ -1011,7 +1015,7 @@ const PrintTemplates = () => {
                   formData.template_content.paperSize === 'A4' ? 'a4' : 'standard'
                 }`}>
                   {formData.template_content.showLogo && formData.template_content.logoUrl && (
-                    <div className="preview-logo" style={{textAlign: 'center', margin: '10px 0'}}>
+                    <div className="preview-logo" style={{textAlign: formData.template_content.logoAlign || 'center', margin: '10px 0'}}>
                       <img src={formData.template_content.logoUrl} alt="Logo" style={{maxWidth: '80px', maxHeight: '80px'}} />
                     </div>
                   )}
