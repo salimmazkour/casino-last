@@ -205,6 +205,39 @@ const PrintTemplates = () => {
     }
   };
 
+  const normalizeTemplateContent = (content) => {
+    const defaultContent = {
+      header: '',
+      footer: '',
+      showLogo: false,
+      logoUrl: '',
+      showDate: true,
+      showTable: true,
+      showOrderNumber: true,
+      showPrices: true,
+      fontSize: 'normal',
+      paperSize: '80mm',
+      paperWidth: '80mm',
+      textStyles: {
+        header: { bold: true, size: 12, align: 'center' },
+        body: { bold: false, size: 10, align: 'left' },
+        footer: { bold: false, size: 9, align: 'center' }
+      }
+    };
+
+    if (!content) return defaultContent;
+
+    return {
+      ...defaultContent,
+      ...content,
+      textStyles: {
+        header: { ...defaultContent.textStyles.header, ...(content.textStyles?.header || {}) },
+        body: { ...defaultContent.textStyles.body, ...(content.textStyles?.body || {}) },
+        footer: { ...defaultContent.textStyles.footer, ...(content.textStyles?.footer || {}) }
+      }
+    };
+  };
+
   const handleEdit = (template) => {
     setEditingTemplate(template);
     setFormData({
@@ -213,16 +246,7 @@ const PrintTemplates = () => {
       printer_definition_id: template.printer_definition_id,
       is_active: template.is_active,
       template_format: template.template_format || 'text',
-      template_content: template.template_content || {
-        header: '',
-        footer: '',
-        showLogo: false,
-        showDate: true,
-        showTable: true,
-        showOrderNumber: true,
-        fontSize: 'normal',
-        paperWidth: '80mm'
-      }
+      template_content: normalizeTemplateContent(template.template_content)
     });
 
     const categoryIds = template.print_template_categories
@@ -274,23 +298,7 @@ const PrintTemplates = () => {
       is_active: true,
       template_format: 'text',
       preset_id: '',
-      template_content: {
-        header: '',
-        footer: '',
-        showLogo: false,
-        logoUrl: '',
-        showDate: true,
-        showTable: true,
-        showOrderNumber: true,
-        showPrices: true,
-        fontSize: 'normal',
-        paperSize: '80mm',
-        textStyles: {
-          header: { bold: true, size: 12, align: 'center' },
-          body: { bold: false, size: 10, align: 'left' },
-          footer: { bold: false, size: 9, align: 'center' }
-        }
-      }
+      template_content: normalizeTemplateContent(null)
     });
     setSelectedCategories([]);
     setSelectedPrinterSalesPoint(null);
@@ -328,10 +336,7 @@ const PrintTemplates = () => {
         name: selectedTemplate.name + ' (Copie)',
         template_type: selectedTemplate.template_type,
         template_format: selectedTemplate.template_format || 'text',
-        template_content: {
-          ...formData.template_content,
-          ...selectedTemplate.template_content
-        }
+        template_content: normalizeTemplateContent(selectedTemplate.template_content)
       });
 
       if (selectedTemplate.print_template_categories && selectedTemplate.print_template_categories.length > 0) {
