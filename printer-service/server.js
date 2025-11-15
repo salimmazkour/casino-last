@@ -232,6 +232,7 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
         const processedLine = line
           .replace(/\{\{order_number\}\}/g, orderData.order_number || orderData.id)
           .replace(/\{\{table\}\}/g, orderData.table_name || '')
+          .replace(/\{\{client_name\}\}/g, orderData.client_name || '')
           .replace(/\{\{date\}\}/g, new Date().toLocaleString('fr-FR'))
           .replace(/\{\{total\}\}/g, `${orderData.total_amount || 0}€`)
           .replace(/\{\{pos\}\}/g, orderData.sales_point_name || '');
@@ -263,19 +264,25 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
 
     if (orderData.items && orderData.items.length > 0) {
       const showPrices = templateContent.showPrices !== false;
+      const bodyStyle = templateContent.textStyles?.body || { bold: false, size: 10 };
+
       orderData.items.forEach(item => {
         const itemText = `${item.quantity}x ${item.product_name}`;
 
         if (showPrices) {
           const priceText = `${(item.quantity * (item.unit_price || 0)).toFixed(2)}€`;
-          doc.font('Helvetica').fontSize(8).text(itemText, { continued: true });
+          doc.font(bodyStyle.bold ? 'Helvetica-Bold' : 'Helvetica')
+             .fontSize(bodyStyle.size || 10)
+             .text(itemText, { continued: true });
           doc.text(priceText, { align: 'right' });
         } else {
-          doc.font('Helvetica').fontSize(8).text(itemText);
+          doc.font(bodyStyle.bold ? 'Helvetica-Bold' : 'Helvetica')
+             .fontSize(bodyStyle.size || 10)
+             .text(itemText);
         }
 
         if (item.notes) {
-          doc.fontSize(7).text(`   Note: ${item.notes}`);
+          doc.font('Helvetica').fontSize(7).text(`   Note: ${item.notes}`);
         }
       });
     }
@@ -293,15 +300,19 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
       doc.moveDown();
       doc.fontSize(10).text('================================', { align: 'center' });
       doc.moveDown(0.5);
+      const footerStyle = templateContent.textStyles?.footer || { bold: false, size: 9, align: 'center' };
       const footerLines = templateContent.footer.split('\n');
       footerLines.forEach(line => {
         const processedLine = line
           .replace(/\{\{order_number\}\}/g, orderData.order_number || orderData.id)
           .replace(/\{\{table\}\}/g, orderData.table_name || '')
+          .replace(/\{\{client_name\}\}/g, orderData.client_name || '')
           .replace(/\{\{date\}\}/g, new Date().toLocaleString('fr-FR'))
           .replace(/\{\{total\}\}/g, `${orderData.total_amount || 0}€`)
           .replace(/\{\{pos\}\}/g, orderData.sales_point_name || '');
-        doc.fontSize(8).text(processedLine, { align: 'center' });
+        doc.font(footerStyle.bold ? 'Helvetica-Bold' : 'Helvetica')
+           .fontSize(footerStyle.size || 9)
+           .text(processedLine, { align: footerStyle.align || 'center' });
       });
     }
 
@@ -337,7 +348,8 @@ app.post('/api/print', async (req, res) => {
           products (name)
         ),
         restaurant_tables (table_number),
-        sales_points (name)
+        sales_points (name),
+        clients (first_name, last_name)
       `)
       .eq('id', order_id)
       .single();
@@ -358,11 +370,16 @@ app.post('/api/print', async (req, res) => {
 
     const templateContent = template?.template_content || {};
 
+    const clientName = order.clients
+      ? `${order.clients.first_name || ''} ${order.clients.last_name || ''}`.trim()
+      : '';
+
     const orderData = {
       id: order.id,
       order_number: order.order_number,
       table_name: order.restaurant_tables?.table_number,
       sales_point_name: order.sales_points?.name,
+      client_name: clientName,
       total_amount: order.total_amount,
       items: order.order_items.map(item => ({
         quantity: item.quantity,

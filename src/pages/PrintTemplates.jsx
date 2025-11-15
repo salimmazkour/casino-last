@@ -316,22 +316,30 @@ const PrintTemplates = () => {
     }
   };
 
-  const handlePresetChange = (presetId) => {
-    if (!presetId) {
-      setFormData({...formData, preset_id: ''});
+  const handleTemplateLoad = (templateId) => {
+    if (!templateId) {
       return;
     }
 
-    const selectedPreset = presets.find(p => p.id === presetId);
-    if (selectedPreset) {
+    const selectedTemplate = templates.find(t => t.id === templateId);
+    if (selectedTemplate) {
       setFormData({
         ...formData,
-        preset_id: presetId,
+        name: selectedTemplate.name + ' (Copie)',
+        template_type: selectedTemplate.template_type,
+        template_format: selectedTemplate.template_format || 'text',
         template_content: {
           ...formData.template_content,
-          ...selectedPreset.template_content
+          ...selectedTemplate.template_content
         }
       });
+
+      if (selectedTemplate.print_template_categories && selectedTemplate.print_template_categories.length > 0) {
+        const categoryIds = selectedTemplate.print_template_categories
+          .map(ptc => ptc.category_id)
+          .filter(id => id);
+        setSelectedCategories(categoryIds);
+      }
     }
   };
 
@@ -540,19 +548,19 @@ const PrintTemplates = () => {
                 <h4>🎨 Personnalisation du ticket</h4>
 
                 <div className="form-group">
-                  <label>📋 Charger un template pré-défini</label>
+                  <label>📋 Copier un template existant</label>
                   <select
-                    value={formData.preset_id}
-                    onChange={e => handlePresetChange(e.target.value)}
+                    onChange={e => handleTemplateLoad(e.target.value)}
+                    value=""
                   >
-                    <option value="">-- Créer un nouveau template --</option>
-                    {presets.map(preset => (
-                      <option key={preset.id} value={preset.id}>
-                        {preset.name} - {preset.description}
+                    <option value="">-- Sélectionnez un template à copier --</option>
+                    {templates.filter(t => !editingTemplate || t.id !== editingTemplate.id).map(template => (
+                      <option key={template.id} value={template.id}>
+                        {template.name} ({template.template_type === 'caisse' ? 'Caisse' : 'Fabrication'})
                       </option>
                     ))}
                   </select>
-                  <small>Choisissez un template existant pour gagner du temps, puis personnalisez-le selon vos besoins</small>
+                  <small>Chargez un template existant pour copier sa configuration et gagner du temps</small>
                 </div>
 
                 <div className="form-row">
@@ -651,7 +659,102 @@ const PrintTemplates = () => {
                 </div>
 
                 <div className="form-group">
+                  <label>Corps du ticket (articles)</label>
+                  <div className="text-style-options">
+                    <label className="inline-option">
+                      <input
+                        type="checkbox"
+                        checked={formData.template_content.textStyles?.body?.bold}
+                        onChange={e => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              body: {
+                                ...formData.template_content.textStyles.body,
+                                bold: e.target.checked
+                              }
+                            }
+                          }
+                        })}
+                      />
+                      <strong>Gras</strong>
+                    </label>
+                    <label className="inline-option">
+                      Taille:
+                      <input
+                        type="number"
+                        min="8"
+                        max="24"
+                        value={formData.template_content.textStyles?.body?.size || 10}
+                        onChange={e => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              body: {
+                                ...formData.template_content.textStyles.body,
+                                size: parseInt(e.target.value)
+                              }
+                            }
+                          }
+                        })}
+                        style={{width: '60px', marginLeft: '5px'}}
+                      />
+                    </label>
+                  </div>
+                  <small>Style de police pour la liste des articles</small>
+                </div>
+
+                <div className="form-group">
                   <label>Pied de page personnalisé</label>
+                  <div className="text-style-options">
+                    <label className="inline-option">
+                      <input
+                        type="checkbox"
+                        checked={formData.template_content.textStyles?.footer?.bold}
+                        onChange={e => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              footer: {
+                                ...formData.template_content.textStyles.footer,
+                                bold: e.target.checked
+                              }
+                            }
+                          }
+                        })}
+                      />
+                      <strong>Gras</strong>
+                    </label>
+                    <label className="inline-option">
+                      Taille:
+                      <input
+                        type="number"
+                        min="8"
+                        max="24"
+                        value={formData.template_content.textStyles?.footer?.size || 9}
+                        onChange={e => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              footer: {
+                                ...formData.template_content.textStyles.footer,
+                                size: parseInt(e.target.value)
+                              }
+                            }
+                          }
+                        })}
+                        style={{width: '60px', marginLeft: '5px'}}
+                      />
+                    </label>
+                  </div>
                   <textarea
                     value={formData.template_content.footer}
                     onChange={e => setFormData({...formData, template_content: {...formData.template_content, footer: e.target.value}})}
@@ -714,6 +817,7 @@ const PrintTemplates = () => {
                   <div className="variables-list">
                     <code>{'{{order_number}}'}</code> - Numéro de commande
                     <code>{'{{table}}'}</code> - Numéro de table
+                    <code>{'{{client_name}}'}</code> - Nom du client
                     <code>{'{{date}}'}</code> - Date et heure
                     <code>{'{{total}}'}</code> - Montant total
                     <code>{'{{pos}}'}</code> - Point de vente
