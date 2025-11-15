@@ -538,6 +538,8 @@ export default function POS() {
 
         await deductStockFromOrder(insertedItems, order.order_number);
 
+        await PrintService.printMultipleTickets(order.id, selectedSalesPoint.id, ['fabrication', 'caisse']);
+
         await processPendingVoids(order.id);
       } else {
         const updateData = {
@@ -560,6 +562,8 @@ export default function POS() {
           .single();
 
         orderNumber = order.order_number;
+
+        await PrintService.printMultipleTickets(orderId, selectedSalesPoint.id, ['caisse']);
       }
 
       for (const [method, amount] of Object.entries(paymentMethods)) {
@@ -973,7 +977,7 @@ export default function POS() {
         setProductionSlipPrinted(true);
 
         await deductStockFromOrder(insertedItems, order.order_number);
-        await printProductionSlip(cart.filter(item => !item.pendingCancellation), orderNumber, order.id);
+        await PrintService.printMultipleTickets(order.id, selectedSalesPoint.id, ['fabrication', 'caisse']);
 
         console.log('[POS] New order created and printed');
         alert('✅ Ticket imprimé et envoyé en cuisine !');
@@ -1017,8 +1021,7 @@ export default function POS() {
           .update(updateData)
           .eq('id', currentOrderId);
 
-        // Imprimer le ticket
-        await printProductionSlip(cart.filter(item => !item.pendingCancellation), currentOrder.order_number, currentOrderId);
+        await PrintService.printMultipleTickets(currentOrderId, selectedSalesPoint.id, ['caisse']);
 
         console.log('[POS] Order updated, print complete');
         alert('✅ Ticket réimprimé !');

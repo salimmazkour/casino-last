@@ -388,7 +388,14 @@ app.post('/api/print', async (req, res) => {
 
     const { data: template, error: templateError } = await supabase
       .from('print_templates')
-      .select('template_content')
+      .select(`
+        template_content,
+        printer_definition_id,
+        printer_definitions!printer_definition_id (
+          physical_printer_name,
+          sales_point_id
+        )
+      `)
       .eq('template_type', template_type)
       .eq('is_active', true)
       .maybeSingle();
@@ -421,14 +428,23 @@ app.post('/api/print', async (req, res) => {
     console.log(`📄 Génération PDF pour ${template_type}...`);
     const pdfPath = await generateTicketPDF(orderData, template_type, templateContent);
 
-    const logicalPrinterId = template_type.replace('ticket_', '').toUpperCase();
-    const physicalPrinter = printerMapping[logicalPrinterId];
-
-    if (!physicalPrinter) {
-      throw new Error(`Aucun mapping trouvé pour ${logicalPrinterId}`);
+    if (!template || !template.printer_definitions) {
+      throw new Error(`Aucune imprimante définie pour le template ${template_type}`);
     }
 
-    console.log(`🖨️  Impression sur: ${physicalPrinter} (${logicalPrinterId})`);
+    const printerDef = template.printer_definitions;
+
+    if (sales_point_id && printerDef.sales_point_id !== sales_point_id) {
+      throw new Error(`L'imprimante définie pour ce template n'est pas associée au point de vente`);
+    }
+
+    const physicalPrinter = printerDef.physical_printer_name;
+
+    if (!physicalPrinter) {
+      throw new Error(`Aucune imprimante physique définie pour ${template_type}`);
+    }
+
+    console.log(`🖨️  Impression sur: ${physicalPrinter} (Point de vente: ${printerDef.sales_point_id})`);
     console.log(`📄 Fichier: ${pdfPath}`);
 
     await print(pdfPath, { printer: physicalPrinter });
@@ -447,8 +463,9 @@ app.post('/api/print', async (req, res) => {
       success: true,
       message: 'Impression envoyée avec succès',
       routing: {
-        logical: logicalPrinterId,
-        physical: physicalPrinter
+        template_type: template_type,
+        physical: physicalPrinter,
+        sales_point_id: printerDef.sales_point_id
       }
     });
 
