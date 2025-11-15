@@ -45,7 +45,7 @@ const PrintTemplates = () => {
           .from('print_templates')
           .select(`
             *,
-            printer_definitions (
+            printer_definitions!printer_definition_id (
               name,
               sales_point_id,
               sales_points (name)
