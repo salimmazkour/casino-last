@@ -257,7 +257,7 @@ app.post('/api/print', async (req, res) => {
           notes,
           products (name)
         ),
-        tables (name),
+        restaurant_tables (name),
         sales_points (name)
       `)
       .eq('id', order_id)
@@ -269,7 +269,7 @@ app.post('/api/print', async (req, res) => {
     const orderData = {
       id: order.id,
       order_number: order.order_number,
-      table_name: order.tables?.name,
+      table_name: order.restaurant_tables?.name,
       sales_point_name: order.sales_points?.name,
       total_amount: order.total_amount,
       items: order.order_items.map(item => ({
