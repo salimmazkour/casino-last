@@ -393,6 +393,7 @@ app.post('/api/print', async (req, res) => {
         printer_definition_id,
         printer_definitions!printer_definition_id (
           name,
+          physical_printer_name,
           sales_point_id
         )
       `)
@@ -438,7 +439,7 @@ app.post('/api/print', async (req, res) => {
       throw new Error(`L'imprimante définie pour ce template n'est pas associée au point de vente`);
     }
 
-    const physicalPrinter = printerDef.name;
+    const physicalPrinter = printerDef.physical_printer_name || printerDef.name;
 
     if (!physicalPrinter) {
       throw new Error(`Aucune imprimante physique définie pour ${template_type}`);

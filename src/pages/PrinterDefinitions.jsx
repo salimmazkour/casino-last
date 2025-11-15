@@ -220,7 +220,8 @@ const PrinterDefinitions = () => {
         name: formData.name,
         sales_point_id: formData.sales_point_id,
         description: formData.description || null,
-        is_active: formData.is_active
+        is_active: formData.is_active,
+        physical_printer_name: formData.physical_printer || null
       };
 
       let printerId;
@@ -267,7 +268,7 @@ const PrinterDefinitions = () => {
       sales_point_id: printer.sales_point_id,
       description: printer.description || '',
       is_active: printer.is_active,
-      physical_printer: physicalPrinterMapping[printer.id] || ''
+      physical_printer: printer.physical_printer_name || physicalPrinterMapping[printer.id] || ''
     });
     setShowModal(true);
   };
