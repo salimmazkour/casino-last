@@ -241,8 +241,9 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
             xPos = pageWidth - logoWidth - doc.page.margins.right;
           }
 
-          doc.image(buffer, xPos, doc.y, { fit: [logoWidth, 80] });
-          doc.moveDown(3);
+          const imgHeight = 80;
+          doc.image(buffer, xPos, doc.y, { fit: [logoWidth, imgHeight] });
+          doc.y += imgHeight + 10;
         }
       } catch (logoError) {
         console.error('⚠️ Erreur chargement logo:', logoError.message);
