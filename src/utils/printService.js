@@ -88,6 +88,11 @@ export class PrintService {
           templateType,
           ...result,
         });
+
+        // Délai de 500ms entre chaque impression pour éviter les conflits
+        if (templateTypes.indexOf(templateType) < templateTypes.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       } catch (error) {
         results.push({
           templateType,
