@@ -69,17 +69,31 @@ const PrintTemplates = () => {
 
       console.log('📥 Templates loaded:', templatesRes.data);
       console.log('📥 Templates error:', templatesRes.error);
+      console.log('📥 Printers loaded:', printersRes.data);
+      console.log('📥 Categories loaded:', categoriesRes.data);
 
       if (templatesRes.error) {
         console.error('❌ Error loading templates:', templatesRes.error);
+        alert('Erreur lors du chargement des modèles: ' + templatesRes.error.message);
       }
 
-      if (templatesRes.data) setTemplates(templatesRes.data);
+      if (printersRes.error) {
+        console.error('❌ Error loading printers:', printersRes.error);
+      }
+
+      if (categoriesRes.error) {
+        console.error('❌ Error loading categories:', categoriesRes.error);
+      }
+
+      if (templatesRes.data) {
+        console.log('✅ Setting templates state with', templatesRes.data.length, 'items');
+        setTemplates(templatesRes.data);
+      }
       if (printersRes.data) setPrinterDefinitions(printersRes.data);
       if (categoriesRes.data) setCategories(categoriesRes.data);
     } catch (error) {
-      console.error('Erreur chargement:', error);
-      alert('Erreur lors du chargement des données');
+      console.error('❌ Erreur chargement:', error);
+      alert('Erreur lors du chargement des données: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -245,6 +259,9 @@ const PrintTemplates = () => {
   };
 
   if (loading) return <div className="loading">Chargement...</div>;
+
+  console.log('🎨 Rendering with templates:', templates);
+  console.log('🎨 Templates length:', templates.length);
 
   return (
     <div className="print-templates-container">
