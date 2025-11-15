@@ -16,7 +16,18 @@ const PrintTemplates = () => {
     name: '',
     template_type: 'fabrication',
     printer_definition_id: '',
-    is_active: true
+    is_active: true,
+    template_format: 'text',
+    template_content: {
+      header: '',
+      footer: '',
+      showLogo: false,
+      showDate: true,
+      showTable: true,
+      showOrderNumber: true,
+      fontSize: 'normal',
+      paperWidth: '80mm'
+    }
   });
 
   useEffect(() => {
@@ -124,7 +135,9 @@ const PrintTemplates = () => {
         name: formData.name,
         template_type: formData.template_type,
         printer_definition_id: formData.printer_definition_id,
-        is_active: formData.is_active
+        is_active: formData.is_active,
+        template_format: formData.template_format,
+        template_content: formData.template_content
       };
 
       let templateId;
@@ -183,7 +196,18 @@ const PrintTemplates = () => {
       name: template.name,
       template_type: template.template_type,
       printer_definition_id: template.printer_definition_id,
-      is_active: template.is_active
+      is_active: template.is_active,
+      template_format: template.template_format || 'text',
+      template_content: template.template_content || {
+        header: '',
+        footer: '',
+        showLogo: false,
+        showDate: true,
+        showTable: true,
+        showOrderNumber: true,
+        fontSize: 'normal',
+        paperWidth: '80mm'
+      }
     });
 
     const categoryIds = template.print_template_categories
@@ -232,7 +256,18 @@ const PrintTemplates = () => {
       name: '',
       template_type: 'fabrication',
       printer_definition_id: '',
-      is_active: true
+      is_active: true,
+      template_format: 'text',
+      template_content: {
+        header: '',
+        footer: '',
+        showLogo: false,
+        showDate: true,
+        showTable: true,
+        showOrderNumber: true,
+        fontSize: 'normal',
+        paperWidth: '80mm'
+      }
     });
     setSelectedCategories([]);
     setSelectedPrinterSalesPoint(null);
@@ -458,6 +493,137 @@ const PrintTemplates = () => {
                   ℹ️ Les tickets de caisse impriment automatiquement TOUS les produits de la commande
                 </div>
               )}
+
+              <div className="template-customization">
+                <h4>🎨 Personnalisation du ticket</h4>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Format d'impression</label>
+                    <select
+                      value={formData.template_format}
+                      onChange={e => setFormData({...formData, template_format: e.target.value})}
+                    >
+                      <option value="text">Texte simple</option>
+                      <option value="html">HTML</option>
+                      <option value="escpos">ESC/POS (avancé)</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Largeur du papier</label>
+                    <select
+                      value={formData.template_content.paperWidth}
+                      onChange={e => setFormData({...formData, template_content: {...formData.template_content, paperWidth: e.target.value}})}
+                    >
+                      <option value="58mm">58mm (petit)</option>
+                      <option value="80mm">80mm (standard)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>En-tête personnalisé</label>
+                  <textarea
+                    value={formData.template_content.header}
+                    onChange={e => setFormData({...formData, template_content: {...formData.template_content, header: e.target.value}})}
+                    placeholder="Ex: CASINO CAP VERT&#10;Boavista - Sal Rei&#10;Tel: +238 251 11 56"
+                    rows="4"
+                  />
+                  <small>Texte affiché en haut du ticket. Utilisez plusieurs lignes pour l'adresse.</small>
+                </div>
+
+                <div className="form-group">
+                  <label>Pied de page personnalisé</label>
+                  <textarea
+                    value={formData.template_content.footer}
+                    onChange={e => setFormData({...formData, template_content: {...formData.template_content, footer: e.target.value}})}
+                    placeholder="Ex: Merci de votre visite !&#10;À bientôt"
+                    rows="3"
+                  />
+                  <small>Texte affiché en bas du ticket.</small>
+                </div>
+
+                <div className="customization-options">
+                  <label className="option-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={formData.template_content.showDate}
+                      onChange={e => setFormData({...formData, template_content: {...formData.template_content, showDate: e.target.checked}})}
+                    />
+                    <span>Afficher la date et l'heure</span>
+                  </label>
+
+                  <label className="option-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={formData.template_content.showTable}
+                      onChange={e => setFormData({...formData, template_content: {...formData.template_content, showTable: e.target.checked}})}
+                    />
+                    <span>Afficher le numéro de table</span>
+                  </label>
+
+                  <label className="option-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={formData.template_content.showOrderNumber}
+                      onChange={e => setFormData({...formData, template_content: {...formData.template_content, showOrderNumber: e.target.checked}})}
+                    />
+                    <span>Afficher le numéro de commande</span>
+                  </label>
+                </div>
+
+                <div className="variables-help">
+                  <strong>📝 Variables disponibles :</strong>
+                  <div className="variables-list">
+                    <code>{'{{order_number}}'}</code> - Numéro de commande
+                    <code>{'{{table}}'}</code> - Numéro de table
+                    <code>{'{{date}}'}</code> - Date et heure
+                    <code>{'{{total}}'}</code> - Montant total
+                    <code>{'{{pos}}'}</code> - Point de vente
+                  </div>
+                  <small>Vous pouvez utiliser ces variables dans l'en-tête et le pied de page.</small>
+                </div>
+              </div>
+
+              <div className="ticket-preview">
+                <h4>📄 Prévisualisation</h4>
+                <div className={`preview-ticket ${formData.template_content.paperWidth === '58mm' ? 'narrow' : 'standard'}`}>
+                  {formData.template_content.header && (
+                    <div className="preview-header">
+                      {formData.template_content.header.split('\n').map((line, i) => (
+                        <div key={i}>{line || ' '}</div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="preview-separator">================================</div>
+                  {formData.template_content.showDate && (
+                    <div className="preview-line">Date: 15/11/2025 19:30:45</div>
+                  )}
+                  {formData.template_content.showOrderNumber && (
+                    <div className="preview-line">N° Commande: ORD-123456</div>
+                  )}
+                  {formData.template_content.showTable && (
+                    <div className="preview-line">Table: T12</div>
+                  )}
+                  <div className="preview-separator">================================</div>
+                  <div className="preview-line">2x Hamburger............15.00€</div>
+                  <div className="preview-line">1x Coca-Cola............. 2.50€</div>
+                  <div className="preview-line">1x Café.................. 1.50€</div>
+                  <div className="preview-separator">================================</div>
+                  <div className="preview-total">TOTAL: 19.00€</div>
+                  {formData.template_content.footer && (
+                    <>
+                      <div className="preview-separator">================================</div>
+                      <div className="preview-footer">
+                        {formData.template_content.footer.split('\n').map((line, i) => (
+                          <div key={i}>{line || ' '}</div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
 
               <div className="form-group-checkbox">
                 <label>

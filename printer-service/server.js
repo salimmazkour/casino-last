@@ -183,7 +183,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-async function generateTicketPDF(orderData, templateType) {
+async function generateTicketPDF(orderData, templateType, templateContent = {}) {
   const tempDir = path.join(__dirname, 'temp');
   if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir, { recursive: true });
@@ -192,39 +192,81 @@ async function generateTicketPDF(orderData, templateType) {
   const fileName = `ticket_${orderData.id}_${templateType}_${Date.now()}.pdf`;
   const filePath = path.join(tempDir, fileName);
 
+  const paperWidth = templateContent.paperWidth === '58mm' ? 165 : 226.77;
+
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: [226.77, 800], margin: 10 });
+    const doc = new PDFDocument({ size: [paperWidth, 800], margin: 10 });
     const stream = fs.createWriteStream(filePath);
 
     doc.pipe(stream);
 
-    doc.fontSize(12).text(`Commande #${orderData.order_number || orderData.id}`, { align: 'center' });
-    doc.fontSize(8).text(`Type: ${templateType}`, { align: 'center' });
-    doc.moveDown();
-
-    if (orderData.table_name) {
-      doc.fontSize(10).text(`Table: ${orderData.table_name}`);
+    if (templateContent.header) {
+      const headerLines = templateContent.header.split('\n');
+      headerLines.forEach(line => {
+        const processedLine = line
+          .replace(/\{\{order_number\}\}/g, orderData.order_number || orderData.id)
+          .replace(/\{\{table\}\}/g, orderData.table_name || '')
+          .replace(/\{\{date\}\}/g, new Date().toLocaleString('fr-FR'))
+          .replace(/\{\{total\}\}/g, `${orderData.total_amount || 0}€`)
+          .replace(/\{\{pos\}\}/g, orderData.sales_point_name || '');
+        doc.fontSize(10).text(processedLine, { align: 'center' });
+      });
+      doc.moveDown();
     }
-    if (orderData.sales_point_name) {
-      doc.fontSize(8).text(`Point de vente: ${orderData.sales_point_name}`);
-    }
-    doc.moveDown();
 
-    doc.fontSize(8).text('Articles:', { underline: true });
+    doc.fontSize(10).text('================================', { align: 'center' });
+    doc.moveDown(0.5);
+
+    if (templateContent.showDate !== false) {
+      doc.fontSize(8).text(`Date: ${new Date().toLocaleString('fr-FR')}`);
+    }
+
+    if (templateContent.showOrderNumber !== false) {
+      doc.fontSize(9).text(`N° Commande: ${orderData.order_number || orderData.id}`);
+    }
+
+    if (templateContent.showTable !== false && orderData.table_name) {
+      doc.fontSize(9).text(`Table: ${orderData.table_name}`);
+    }
+
+    doc.moveDown(0.5);
+    doc.fontSize(10).text('================================', { align: 'center' });
     doc.moveDown(0.5);
 
     if (orderData.items && orderData.items.length > 0) {
       orderData.items.forEach(item => {
-        doc.fontSize(8).text(`${item.quantity}x ${item.product_name}`, { continued: false });
+        const itemText = `${item.quantity}x ${item.product_name}`;
+        const priceText = `${(item.quantity * (item.unit_price || 0)).toFixed(2)}€`;
+
+        doc.fontSize(8).text(itemText, { continued: true });
+        doc.text(priceText, { align: 'right' });
+
         if (item.notes) {
           doc.fontSize(7).text(`   Note: ${item.notes}`);
         }
       });
     }
 
-    doc.moveDown();
-    doc.fontSize(8).text(`Total: ${orderData.total_amount || 0} €`, { align: 'right' });
-    doc.fontSize(7).text(new Date().toLocaleString('fr-FR'), { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(10).text('================================', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(12).text(`TOTAL: ${orderData.total_amount || 0}€`, { align: 'right' });
+
+    if (templateContent.footer) {
+      doc.moveDown();
+      doc.fontSize(10).text('================================', { align: 'center' });
+      doc.moveDown(0.5);
+      const footerLines = templateContent.footer.split('\n');
+      footerLines.forEach(line => {
+        const processedLine = line
+          .replace(/\{\{order_number\}\}/g, orderData.order_number || orderData.id)
+          .replace(/\{\{table\}\}/g, orderData.table_name || '')
+          .replace(/\{\{date\}\}/g, new Date().toLocaleString('fr-FR'))
+          .replace(/\{\{total\}\}/g, `${orderData.total_amount || 0}€`)
+          .replace(/\{\{pos\}\}/g, orderData.sales_point_name || '');
+        doc.fontSize(8).text(processedLine, { align: 'center' });
+      });
+    }
 
     doc.end();
 
@@ -266,6 +308,19 @@ app.post('/api/print', async (req, res) => {
     if (orderError) throw orderError;
     if (!order) throw new Error('Commande introuvable');
 
+    const { data: template, error: templateError } = await supabase
+      .from('print_templates')
+      .select('template_content')
+      .eq('template_type', template_type)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (templateError) {
+      console.warn(`⚠️ Erreur récupération template: ${templateError.message}`);
+    }
+
+    const templateContent = template?.template_content || {};
+
     const orderData = {
       id: order.id,
       order_number: order.order_number,
@@ -274,13 +329,14 @@ app.post('/api/print', async (req, res) => {
       total_amount: order.total_amount,
       items: order.order_items.map(item => ({
         quantity: item.quantity,
+        unit_price: item.unit_price,
         product_name: item.products?.name,
         notes: item.notes
       }))
     };
 
     console.log(`📄 Génération PDF pour ${template_type}...`);
-    const pdfPath = await generateTicketPDF(orderData, template_type);
+    const pdfPath = await generateTicketPDF(orderData, template_type, templateContent);
 
     const logicalPrinterId = template_type.replace('ticket_', '').toUpperCase();
     const physicalPrinter = printerMapping[logicalPrinterId];
