@@ -29,6 +29,7 @@ const PrintTemplates = () => {
       showTable: true,
       showOrderNumber: true,
       showPrices: true,
+      showClientName: false,
       fontSize: 'normal',
       paperSize: '80mm',
       textStyles: {
@@ -196,6 +197,7 @@ const PrintTemplates = () => {
       showTable: true,
       showOrderNumber: true,
       showPrices: true,
+      showClientName: false,
       fontSize: 'normal',
       paperSize: '80mm',
       paperWidth: '80mm',
@@ -491,6 +493,51 @@ const PrintTemplates = () => {
                     ))}
                   </select>
                   <small>Chargez un template existant pour copier sa configuration et gagner du temps</small>
+                </div>
+
+                <div className="form-group">
+                  <label>🖼️ Logo personnalisé</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={e => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setFormData({
+                            ...formData,
+                            template_content: {
+                              ...formData.template_content,
+                              logoUrl: event.target.result,
+                              showLogo: true
+                            }
+                          });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  <small>Sélectionnez une image locale pour le logo (sera convertie en base64)</small>
+                  {formData.template_content.logoUrl && (
+                    <div style={{marginTop: '10px'}}>
+                      <img src={formData.template_content.logoUrl} alt="Logo preview" style={{maxWidth: '100px', maxHeight: '100px'}} />
+                      <button
+                        type="button"
+                        onClick={() => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            logoUrl: '',
+                            showLogo: false
+                          }
+                        })}
+                        style={{marginLeft: '10px', padding: '5px 10px', backgroundColor: '#e74c3c', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'}}
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-row">
@@ -929,6 +976,15 @@ const PrintTemplates = () => {
                     />
                     <span><strong>Afficher les prix</strong> (décocher pour bons de fabrication)</span>
                   </label>
+
+                  <label className="option-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={formData.template_content.showClientName === true}
+                      onChange={e => setFormData({...formData, template_content: {...formData.template_content, showClientName: e.target.checked}})}
+                    />
+                    <span>Afficher le nom du client</span>
+                  </label>
                 </div>
 
                 <div className="variables-help">
@@ -955,8 +1011,8 @@ const PrintTemplates = () => {
                   formData.template_content.paperSize === 'A4' ? 'a4' : 'standard'
                 }`}>
                   {formData.template_content.showLogo && formData.template_content.logoUrl && (
-                    <div className="preview-logo">
-                      [LOGO: {formData.template_content.logoUrl}]
+                    <div className="preview-logo" style={{textAlign: 'center', margin: '10px 0'}}>
+                      <img src={formData.template_content.logoUrl} alt="Logo" style={{maxWidth: '80px', maxHeight: '80px'}} />
                     </div>
                   )}
                   {formData.template_content.header && (
@@ -979,6 +1035,9 @@ const PrintTemplates = () => {
                   )}
                   {formData.template_content.showTable && (
                     <div className="preview-line">Table: T12</div>
+                  )}
+                  {formData.template_content.showClientName && (
+                    <div className="preview-line">Client: Jean Dupont</div>
                   )}
                   <div className="preview-separator">================================</div>
                   {formData.template_content.showPrices !== false ? (
