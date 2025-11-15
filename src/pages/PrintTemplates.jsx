@@ -248,9 +248,6 @@ const PrintTemplates = () => {
 
   return (
     <div className="print-templates-container">
-      <div style={{background: 'blue', color: 'white', padding: '20px', margin: '0 0 20px 0', textAlign: 'center', fontWeight: 'bold', fontSize: '18px'}}>
-        BANDEAU BLEU DE TEST - SI VOUS VOYEZ CA, LA PAGE SE MET A JOUR CORRECTEMENT
-      </div>
       {!printerServiceOnline && (
         <div style={{background: '#dc3545', color: 'white', padding: '15px 20px', marginBottom: '20px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'}}>
           <span style={{fontSize: '24px'}}>⚠️</span>
