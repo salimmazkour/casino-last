@@ -2,7 +2,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 # --- CONFIG ---
-$repoPath        = "C:\Users\LENOVO\Documents\casino-last"
+$repoPath        = "C:\ERP-CASINO-BUILD\casino-last"
 $intervalSeconds = 10
 $logFile         = Join-Path $repoPath "auto-sync.log"
 # --------------
