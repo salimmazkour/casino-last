@@ -698,6 +698,47 @@
   border-radius: 6px;
 }
 
+.alignment-buttons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.align-btn {
+  padding: 6px 12px;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  min-width: 36px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.align-btn:hover {
+  border-color: #3498db;
+  background: #f0f8ff;
+}
+
+.align-btn.active {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+  font-weight: bold;
+}
+
+.align-btn:first-of-type {
+  transform: rotate(180deg);
+}
+
+.align-btn:last-of-type {
+  /* Keep normal orientation for right align */
+}
+
 @media (max-width: 768px) {
   .print-templates-container {
     padding: 15px;

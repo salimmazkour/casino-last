@@ -264,7 +264,7 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
 
     if (orderData.items && orderData.items.length > 0) {
       const showPrices = templateContent.showPrices !== false;
-      const bodyStyle = templateContent.textStyles?.body || { bold: false, size: 10 };
+      const bodyStyle = templateContent.textStyles?.body || { bold: false, size: 10, align: 'left' };
 
       orderData.items.forEach(item => {
         const itemText = `${item.quantity}x ${item.product_name}`;
@@ -278,7 +278,7 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
         } else {
           doc.font(bodyStyle.bold ? 'Helvetica-Bold' : 'Helvetica')
              .fontSize(bodyStyle.size || 10)
-             .text(itemText);
+             .text(itemText, { align: bodyStyle.align || 'left' });
         }
 
         if (item.notes) {

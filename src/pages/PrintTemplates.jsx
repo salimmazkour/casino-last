@@ -648,6 +648,69 @@ const PrintTemplates = () => {
                         style={{width: '60px', marginLeft: '5px'}}
                       />
                     </label>
+                    <div className="alignment-buttons">
+                      <span style={{marginRight: '5px', fontSize: '13px', color: '#555'}}>Alignement:</span>
+                      <button
+                        type="button"
+                        className={`align-btn ${formData.template_content.textStyles?.header?.align === 'left' ? 'active' : ''}`}
+                        onClick={() => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              header: {
+                                ...formData.template_content.textStyles.header,
+                                align: 'left'
+                              }
+                            }
+                          }
+                        })}
+                        title="Aligner à gauche"
+                      >
+                        ☰
+                      </button>
+                      <button
+                        type="button"
+                        className={`align-btn ${formData.template_content.textStyles?.header?.align === 'center' ? 'active' : ''}`}
+                        onClick={() => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              header: {
+                                ...formData.template_content.textStyles.header,
+                                align: 'center'
+                              }
+                            }
+                          }
+                        })}
+                        title="Centrer"
+                      >
+                        ☷
+                      </button>
+                      <button
+                        type="button"
+                        className={`align-btn ${formData.template_content.textStyles?.header?.align === 'right' ? 'active' : ''}`}
+                        onClick={() => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              header: {
+                                ...formData.template_content.textStyles.header,
+                                align: 'right'
+                              }
+                            }
+                          }
+                        })}
+                        title="Aligner à droite"
+                      >
+                        ☰
+                      </button>
+                    </div>
                   </div>
                   <textarea
                     value={formData.template_content.header}
@@ -704,6 +767,69 @@ const PrintTemplates = () => {
                         style={{width: '60px', marginLeft: '5px'}}
                       />
                     </label>
+                    <div className="alignment-buttons">
+                      <span style={{marginRight: '5px', fontSize: '13px', color: '#555'}}>Alignement:</span>
+                      <button
+                        type="button"
+                        className={`align-btn ${formData.template_content.textStyles?.body?.align === 'left' ? 'active' : ''}`}
+                        onClick={() => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              body: {
+                                ...formData.template_content.textStyles.body,
+                                align: 'left'
+                              }
+                            }
+                          }
+                        })}
+                        title="Aligner à gauche"
+                      >
+                        ☰
+                      </button>
+                      <button
+                        type="button"
+                        className={`align-btn ${formData.template_content.textStyles?.body?.align === 'center' ? 'active' : ''}`}
+                        onClick={() => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              body: {
+                                ...formData.template_content.textStyles.body,
+                                align: 'center'
+                              }
+                            }
+                          }
+                        })}
+                        title="Centrer"
+                      >
+                        ☷
+                      </button>
+                      <button
+                        type="button"
+                        className={`align-btn ${formData.template_content.textStyles?.body?.align === 'right' ? 'active' : ''}`}
+                        onClick={() => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              body: {
+                                ...formData.template_content.textStyles.body,
+                                align: 'right'
+                              }
+                            }
+                          }
+                        })}
+                        title="Aligner à droite"
+                      >
+                        ☰
+                      </button>
+                    </div>
                   </div>
                   <small>Style de police pour la liste des articles</small>
                 </div>
@@ -754,6 +880,69 @@ const PrintTemplates = () => {
                         style={{width: '60px', marginLeft: '5px'}}
                       />
                     </label>
+                    <div className="alignment-buttons">
+                      <span style={{marginRight: '5px', fontSize: '13px', color: '#555'}}>Alignement:</span>
+                      <button
+                        type="button"
+                        className={`align-btn ${formData.template_content.textStyles?.footer?.align === 'left' ? 'active' : ''}`}
+                        onClick={() => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              footer: {
+                                ...formData.template_content.textStyles.footer,
+                                align: 'left'
+                              }
+                            }
+                          }
+                        })}
+                        title="Aligner à gauche"
+                      >
+                        ☰
+                      </button>
+                      <button
+                        type="button"
+                        className={`align-btn ${formData.template_content.textStyles?.footer?.align === 'center' ? 'active' : ''}`}
+                        onClick={() => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              footer: {
+                                ...formData.template_content.textStyles.footer,
+                                align: 'center'
+                              }
+                            }
+                          }
+                        })}
+                        title="Centrer"
+                      >
+                        ☷
+                      </button>
+                      <button
+                        type="button"
+                        className={`align-btn ${formData.template_content.textStyles?.footer?.align === 'right' ? 'active' : ''}`}
+                        onClick={() => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              footer: {
+                                ...formData.template_content.textStyles.footer,
+                                align: 'right'
+                              }
+                            }
+                          }
+                        })}
+                        title="Aligner à droite"
+                      >
+                        ☰
+                      </button>
+                    </div>
                   </div>
                   <textarea
                     value={formData.template_content.footer}
@@ -843,7 +1032,8 @@ const PrintTemplates = () => {
                   {formData.template_content.header && (
                     <div className="preview-header" style={{
                       fontWeight: formData.template_content.textStyles?.header?.bold ? 'bold' : 'normal',
-                      fontSize: `${formData.template_content.textStyles?.header?.size || 12}px`
+                      fontSize: `${formData.template_content.textStyles?.header?.size || 12}px`,
+                      textAlign: formData.template_content.textStyles?.header?.align || 'center'
                     }}>
                       {formData.template_content.header.split('\n').map((line, i) => (
                         <div key={i}>{line || ' '}</div>
@@ -863,15 +1053,39 @@ const PrintTemplates = () => {
                   <div className="preview-separator">================================</div>
                   {formData.template_content.showPrices !== false ? (
                     <>
-                      <div className="preview-line">2x Hamburger............15.00€</div>
-                      <div className="preview-line">1x Coca-Cola............. 2.50€</div>
-                      <div className="preview-line">1x Café.................. 1.50€</div>
+                      <div className="preview-line" style={{
+                        fontWeight: formData.template_content.textStyles?.body?.bold ? 'bold' : 'normal',
+                        fontSize: `${formData.template_content.textStyles?.body?.size || 10}px`,
+                        textAlign: formData.template_content.textStyles?.body?.align || 'left'
+                      }}>2x Hamburger............15.00€</div>
+                      <div className="preview-line" style={{
+                        fontWeight: formData.template_content.textStyles?.body?.bold ? 'bold' : 'normal',
+                        fontSize: `${formData.template_content.textStyles?.body?.size || 10}px`,
+                        textAlign: formData.template_content.textStyles?.body?.align || 'left'
+                      }}>1x Coca-Cola............. 2.50€</div>
+                      <div className="preview-line" style={{
+                        fontWeight: formData.template_content.textStyles?.body?.bold ? 'bold' : 'normal',
+                        fontSize: `${formData.template_content.textStyles?.body?.size || 10}px`,
+                        textAlign: formData.template_content.textStyles?.body?.align || 'left'
+                      }}>1x Café.................. 1.50€</div>
                     </>
                   ) : (
                     <>
-                      <div className="preview-line">2x Hamburger</div>
-                      <div className="preview-line">1x Coca-Cola</div>
-                      <div className="preview-line">1x Café</div>
+                      <div className="preview-line" style={{
+                        fontWeight: formData.template_content.textStyles?.body?.bold ? 'bold' : 'normal',
+                        fontSize: `${formData.template_content.textStyles?.body?.size || 10}px`,
+                        textAlign: formData.template_content.textStyles?.body?.align || 'left'
+                      }}>2x Hamburger</div>
+                      <div className="preview-line" style={{
+                        fontWeight: formData.template_content.textStyles?.body?.bold ? 'bold' : 'normal',
+                        fontSize: `${formData.template_content.textStyles?.body?.size || 10}px`,
+                        textAlign: formData.template_content.textStyles?.body?.align || 'left'
+                      }}>1x Coca-Cola</div>
+                      <div className="preview-line" style={{
+                        fontWeight: formData.template_content.textStyles?.body?.bold ? 'bold' : 'normal',
+                        fontSize: `${formData.template_content.textStyles?.body?.size || 10}px`,
+                        textAlign: formData.template_content.textStyles?.body?.align || 'left'
+                      }}>1x Café</div>
                     </>
                   )}
                   <div className="preview-separator">================================</div>
@@ -881,7 +1095,11 @@ const PrintTemplates = () => {
                   {formData.template_content.footer && (
                     <>
                       <div className="preview-separator">================================</div>
-                      <div className="preview-footer">
+                      <div className="preview-footer" style={{
+                        fontWeight: formData.template_content.textStyles?.footer?.bold ? 'bold' : 'normal',
+                        fontSize: `${formData.template_content.textStyles?.footer?.size || 9}px`,
+                        textAlign: formData.template_content.textStyles?.footer?.align || 'center'
+                      }}>
                         {formData.template_content.footer.split('\n').map((line, i) => (
                           <div key={i}>{line || ' '}</div>
                         ))}
