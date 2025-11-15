@@ -1000,7 +1000,7 @@ export default function POS() {
 
         const { data: currentOrder } = await supabase
           .from('orders')
-          .select('print_count')
+          .select('print_count, order_number')
           .eq('id', currentOrderId)
           .single();
 
@@ -1016,6 +1016,9 @@ export default function POS() {
           .from('orders')
           .update(updateData)
           .eq('id', currentOrderId);
+
+        // Imprimer le ticket
+        await printProductionSlip(cart.filter(item => !item.pendingCancellation), currentOrder.order_number, currentOrderId);
 
         console.log('[POS] Order updated, print complete');
         alert('✅ Ticket réimprimé !');
