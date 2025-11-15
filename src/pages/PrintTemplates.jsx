@@ -6,6 +6,7 @@ const PrintTemplates = () => {
   const [templates, setTemplates] = useState([]);
   const [printerDefinitions, setPrinterDefinitions] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [presets, setPresets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
@@ -18,15 +19,23 @@ const PrintTemplates = () => {
     printer_definition_id: '',
     is_active: true,
     template_format: 'text',
+    preset_id: '',
     template_content: {
       header: '',
       footer: '',
       showLogo: false,
+      logoUrl: '',
       showDate: true,
       showTable: true,
       showOrderNumber: true,
+      showPrices: true,
       fontSize: 'normal',
-      paperWidth: '80mm'
+      paperSize: '80mm',
+      textStyles: {
+        header: { bold: true, size: 12, align: 'center' },
+        body: { bold: false, size: 10, align: 'left' },
+        footer: { bold: false, size: 9, align: 'center' }
+      }
     }
   });
 
@@ -51,7 +60,7 @@ const PrintTemplates = () => {
     try {
       setLoading(true);
 
-      const [templatesRes, printersRes, categoriesRes] = await Promise.all([
+      const [templatesRes, printersRes, categoriesRes, presetsRes] = await Promise.all([
         supabase
           .from('print_templates')
           .select(`
@@ -75,6 +84,10 @@ const PrintTemplates = () => {
         supabase
           .from('product_categories')
           .select('id, name, icon, description')
+          .order('name'),
+        supabase
+          .from('print_template_presets')
+          .select('*')
           .order('name')
       ]);
 
@@ -82,6 +95,7 @@ const PrintTemplates = () => {
       console.log('📥 Templates error:', templatesRes.error);
       console.log('📥 Printers loaded:', printersRes.data);
       console.log('📥 Categories loaded:', categoriesRes.data);
+      console.log('📥 Presets loaded:', presetsRes.data);
 
       if (templatesRes.error) {
         console.error('❌ Error loading templates:', templatesRes.error);
@@ -102,6 +116,7 @@ const PrintTemplates = () => {
       }
       if (printersRes.data) setPrinterDefinitions(printersRes.data);
       if (categoriesRes.data) setCategories(categoriesRes.data);
+      if (presetsRes.data) setPresets(presetsRes.data);
     } catch (error) {
       console.error('❌ Erreur chargement:', error);
       alert('Erreur lors du chargement des données: ' + error.message);
@@ -258,15 +273,23 @@ const PrintTemplates = () => {
       printer_definition_id: '',
       is_active: true,
       template_format: 'text',
+      preset_id: '',
       template_content: {
         header: '',
         footer: '',
         showLogo: false,
+        logoUrl: '',
         showDate: true,
         showTable: true,
         showOrderNumber: true,
+        showPrices: true,
         fontSize: 'normal',
-        paperWidth: '80mm'
+        paperSize: '80mm',
+        textStyles: {
+          header: { bold: true, size: 12, align: 'center' },
+          body: { bold: false, size: 10, align: 'left' },
+          footer: { bold: false, size: 9, align: 'center' }
+        }
       }
     });
     setSelectedCategories([]);
@@ -290,6 +313,25 @@ const PrintTemplates = () => {
       setSelectedPrinterSalesPoint(selectedPrinter.sales_points?.name || null);
     } else {
       setSelectedPrinterSalesPoint(null);
+    }
+  };
+
+  const handlePresetChange = (presetId) => {
+    if (!presetId) {
+      setFormData({...formData, preset_id: ''});
+      return;
+    }
+
+    const selectedPreset = presets.find(p => p.id === presetId);
+    if (selectedPreset) {
+      setFormData({
+        ...formData,
+        preset_id: presetId,
+        template_content: {
+          ...formData.template_content,
+          ...selectedPreset.template_content
+        }
+      });
     }
   };
 
@@ -497,6 +539,22 @@ const PrintTemplates = () => {
               <div className="template-customization">
                 <h4>🎨 Personnalisation du ticket</h4>
 
+                <div className="form-group">
+                  <label>📋 Charger un template pré-défini</label>
+                  <select
+                    value={formData.preset_id}
+                    onChange={e => handlePresetChange(e.target.value)}
+                  >
+                    <option value="">-- Créer un nouveau template --</option>
+                    {presets.map(preset => (
+                      <option key={preset.id} value={preset.id}>
+                        {preset.name} - {preset.description}
+                      </option>
+                    ))}
+                  </select>
+                  <small>Choisissez un template existant pour gagner du temps, puis personnalisez-le selon vos besoins</small>
+                </div>
+
                 <div className="form-row">
                   <div className="form-group">
                     <label>Format d'impression</label>
@@ -511,19 +569,78 @@ const PrintTemplates = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>Largeur du papier</label>
+                    <label>Taille du papier</label>
                     <select
-                      value={formData.template_content.paperWidth}
-                      onChange={e => setFormData({...formData, template_content: {...formData.template_content, paperWidth: e.target.value}})}
+                      value={formData.template_content.paperSize}
+                      onChange={e => setFormData({...formData, template_content: {...formData.template_content, paperSize: e.target.value}})}
                     >
-                      <option value="58mm">58mm (petit)</option>
-                      <option value="80mm">80mm (standard)</option>
+                      <option value="58mm">58mm (Ticket étroit)</option>
+                      <option value="80mm">80mm (Ticket standard)</option>
+                      <option value="A6">A6 (105 x 148 mm)</option>
+                      <option value="A5">A5 (148 x 210 mm)</option>
+                      <option value="A4">A4 (210 x 297 mm)</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="form-group">
+                  <label>Logo d'entreprise (optionnel)</label>
+                  <input
+                    type="text"
+                    value={formData.template_content.logoUrl || ''}
+                    onChange={e => setFormData({...formData, template_content: {...formData.template_content, logoUrl: e.target.value}})}
+                    placeholder="URL du logo (ex: https://example.com/logo.png)"
+                  />
+                  <small>URL du logo à afficher en haut du ticket (format PNG/JPG recommandé)</small>
+                </div>
+
+                <div className="form-group">
                   <label>En-tête personnalisé</label>
+                  <div className="text-style-options">
+                    <label className="inline-option">
+                      <input
+                        type="checkbox"
+                        checked={formData.template_content.textStyles?.header?.bold}
+                        onChange={e => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              header: {
+                                ...formData.template_content.textStyles.header,
+                                bold: e.target.checked
+                              }
+                            }
+                          }
+                        })}
+                      />
+                      <strong>Gras</strong>
+                    </label>
+                    <label className="inline-option">
+                      Taille:
+                      <input
+                        type="number"
+                        min="8"
+                        max="24"
+                        value={formData.template_content.textStyles?.header?.size || 12}
+                        onChange={e => setFormData({
+                          ...formData,
+                          template_content: {
+                            ...formData.template_content,
+                            textStyles: {
+                              ...formData.template_content.textStyles,
+                              header: {
+                                ...formData.template_content.textStyles.header,
+                                size: parseInt(e.target.value)
+                              }
+                            }
+                          }
+                        })}
+                        style={{width: '60px', marginLeft: '5px'}}
+                      />
+                    </label>
+                  </div>
                   <textarea
                     value={formData.template_content.header}
                     onChange={e => setFormData({...formData, template_content: {...formData.template_content, header: e.target.value}})}
@@ -545,6 +662,16 @@ const PrintTemplates = () => {
                 </div>
 
                 <div className="customization-options">
+                  <h5>📋 Options d'affichage</h5>
+                  <label className="option-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={formData.template_content.showLogo !== false}
+                      onChange={e => setFormData({...formData, template_content: {...formData.template_content, showLogo: e.target.checked}})}
+                    />
+                    <span>Afficher le logo</span>
+                  </label>
+
                   <label className="option-checkbox">
                     <input
                       type="checkbox"
@@ -571,6 +698,15 @@ const PrintTemplates = () => {
                     />
                     <span>Afficher le numéro de commande</span>
                   </label>
+
+                  <label className="option-checkbox highlight">
+                    <input
+                      type="checkbox"
+                      checked={formData.template_content.showPrices !== false}
+                      onChange={e => setFormData({...formData, template_content: {...formData.template_content, showPrices: e.target.checked}})}
+                    />
+                    <span><strong>Afficher les prix</strong> (décocher pour bons de fabrication)</span>
+                  </label>
                 </div>
 
                 <div className="variables-help">
@@ -588,9 +724,23 @@ const PrintTemplates = () => {
 
               <div className="ticket-preview">
                 <h4>📄 Prévisualisation</h4>
-                <div className={`preview-ticket ${formData.template_content.paperWidth === '58mm' ? 'narrow' : 'standard'}`}>
+                <div className={`preview-ticket ${
+                  formData.template_content.paperSize === '58mm' ? 'narrow' :
+                  formData.template_content.paperSize === '80mm' ? 'standard' :
+                  formData.template_content.paperSize === 'A6' ? 'a6' :
+                  formData.template_content.paperSize === 'A5' ? 'a5' :
+                  formData.template_content.paperSize === 'A4' ? 'a4' : 'standard'
+                }`}>
+                  {formData.template_content.showLogo && formData.template_content.logoUrl && (
+                    <div className="preview-logo">
+                      [LOGO: {formData.template_content.logoUrl}]
+                    </div>
+                  )}
                   {formData.template_content.header && (
-                    <div className="preview-header">
+                    <div className="preview-header" style={{
+                      fontWeight: formData.template_content.textStyles?.header?.bold ? 'bold' : 'normal',
+                      fontSize: `${formData.template_content.textStyles?.header?.size || 12}px`
+                    }}>
                       {formData.template_content.header.split('\n').map((line, i) => (
                         <div key={i}>{line || ' '}</div>
                       ))}
@@ -607,11 +757,23 @@ const PrintTemplates = () => {
                     <div className="preview-line">Table: T12</div>
                   )}
                   <div className="preview-separator">================================</div>
-                  <div className="preview-line">2x Hamburger............15.00€</div>
-                  <div className="preview-line">1x Coca-Cola............. 2.50€</div>
-                  <div className="preview-line">1x Café.................. 1.50€</div>
+                  {formData.template_content.showPrices !== false ? (
+                    <>
+                      <div className="preview-line">2x Hamburger............15.00€</div>
+                      <div className="preview-line">1x Coca-Cola............. 2.50€</div>
+                      <div className="preview-line">1x Café.................. 1.50€</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="preview-line">2x Hamburger</div>
+                      <div className="preview-line">1x Coca-Cola</div>
+                      <div className="preview-line">1x Café</div>
+                    </>
+                  )}
                   <div className="preview-separator">================================</div>
-                  <div className="preview-total">TOTAL: 19.00€</div>
+                  {formData.template_content.showPrices !== false && (
+                    <div className="preview-total">TOTAL: 19.00€</div>
+                  )}
                   {formData.template_content.footer && (
                     <>
                       <div className="preview-separator">================================</div>

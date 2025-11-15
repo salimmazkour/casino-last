@@ -192,15 +192,41 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
   const fileName = `ticket_${orderData.id}_${templateType}_${Date.now()}.pdf`;
   const filePath = path.join(tempDir, fileName);
 
-  const paperWidth = templateContent.paperWidth === '58mm' ? 165 : 226.77;
+  const paperSize = templateContent.paperSize || templateContent.paperWidth || '80mm';
+  let pdfSize;
+  let pdfMargin = 10;
+
+  switch(paperSize) {
+    case '58mm':
+      pdfSize = [165, 800];
+      break;
+    case '80mm':
+      pdfSize = [226.77, 800];
+      break;
+    case 'A6':
+      pdfSize = 'A6';
+      pdfMargin = 20;
+      break;
+    case 'A5':
+      pdfSize = 'A5';
+      pdfMargin = 30;
+      break;
+    case 'A4':
+      pdfSize = 'A4';
+      pdfMargin = 40;
+      break;
+    default:
+      pdfSize = [226.77, 800];
+  }
 
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: [paperWidth, 800], margin: 10 });
+    const doc = new PDFDocument({ size: pdfSize, margin: pdfMargin });
     const stream = fs.createWriteStream(filePath);
 
     doc.pipe(stream);
 
     if (templateContent.header) {
+      const headerStyle = templateContent.textStyles?.header || { bold: true, size: 12, align: 'center' };
       const headerLines = templateContent.header.split('\n');
       headerLines.forEach(line => {
         const processedLine = line
@@ -209,7 +235,9 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
           .replace(/\{\{date\}\}/g, new Date().toLocaleString('fr-FR'))
           .replace(/\{\{total\}\}/g, `${orderData.total_amount || 0}€`)
           .replace(/\{\{pos\}\}/g, orderData.sales_point_name || '');
-        doc.fontSize(10).text(processedLine, { align: 'center' });
+        doc.font(headerStyle.bold ? 'Helvetica-Bold' : 'Helvetica')
+           .fontSize(headerStyle.size || 12)
+           .text(processedLine, { align: headerStyle.align || 'center' });
       });
       doc.moveDown();
     }
@@ -234,12 +262,17 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
     doc.moveDown(0.5);
 
     if (orderData.items && orderData.items.length > 0) {
+      const showPrices = templateContent.showPrices !== false;
       orderData.items.forEach(item => {
         const itemText = `${item.quantity}x ${item.product_name}`;
-        const priceText = `${(item.quantity * (item.unit_price || 0)).toFixed(2)}€`;
 
-        doc.fontSize(8).text(itemText, { continued: true });
-        doc.text(priceText, { align: 'right' });
+        if (showPrices) {
+          const priceText = `${(item.quantity * (item.unit_price || 0)).toFixed(2)}€`;
+          doc.font('Helvetica').fontSize(8).text(itemText, { continued: true });
+          doc.text(priceText, { align: 'right' });
+        } else {
+          doc.font('Helvetica').fontSize(8).text(itemText);
+        }
 
         if (item.notes) {
           doc.fontSize(7).text(`   Note: ${item.notes}`);
@@ -250,7 +283,11 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
     doc.moveDown(0.5);
     doc.fontSize(10).text('================================', { align: 'center' });
     doc.moveDown(0.5);
-    doc.fontSize(12).text(`TOTAL: ${orderData.total_amount || 0}€`, { align: 'right' });
+
+    const showPrices = templateContent.showPrices !== false;
+    if (showPrices) {
+      doc.font('Helvetica-Bold').fontSize(12).text(`TOTAL: ${orderData.total_amount || 0}€`, { align: 'right' });
+    }
 
     if (templateContent.footer) {
       doc.moveDown();
