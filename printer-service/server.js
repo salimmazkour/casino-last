@@ -231,11 +231,18 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
           const base64Data = templateContent.logoUrl.split(',')[1];
           const buffer = Buffer.from(base64Data, 'base64');
           const logoAlign = templateContent.logoAlign || 'center';
-          doc.image(buffer, {
-            fit: [80, 80],
-            align: logoAlign
-          });
-          doc.moveDown();
+          const logoWidth = 80;
+          const pageWidth = doc.page.width;
+          let xPos = doc.page.margins.left;
+
+          if (logoAlign === 'center') {
+            xPos = (pageWidth - logoWidth) / 2;
+          } else if (logoAlign === 'right') {
+            xPos = pageWidth - logoWidth - doc.page.margins.right;
+          }
+
+          doc.image(buffer, xPos, doc.y, { fit: [logoWidth, 80] });
+          doc.moveDown(3);
         }
       } catch (logoError) {
         console.error('⚠️ Erreur chargement logo:', logoError.message);
