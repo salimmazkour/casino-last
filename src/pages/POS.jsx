@@ -367,7 +367,7 @@ export default function POS() {
       const results = await PrintService.printMultipleTickets(
         orderIdToUse,
         selectedSalesPoint.id,
-        ['ticket_cuisine', 'ticket_bar', 'ticket_caisse']
+        ['fabrication', 'caisse']
       );
 
       console.log('📄 Résultats impression:', results);

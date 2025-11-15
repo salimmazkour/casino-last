@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase.js';
 
 export class PrintService {
-  static async printOrder(orderId, salesPointId, templateType = 'ticket_cuisine') {
+  static async printOrder(orderId, salesPointId, templateType = 'fabrication') {
     try {
       const printServiceUrl = import.meta.env.VITE_PRINT_SERVICE_URL || 'http://localhost:3001';
       const printEndpoint = `${printServiceUrl}/api/print`;
@@ -58,7 +58,7 @@ export class PrintService {
 
     let html = `
       <div class="header">
-        ${templateType === 'ticket_cuisine' ? 'CUISINE' : templateType === 'ticket_bar' ? 'BAR' : 'TICKET'}
+        ${templateType === 'fabrication' ? 'FABRICATION' : 'TICKET DE CAISSE'}
       </div>
       <div class="line">Point de vente: ${order.sales_points?.name || 'N/A'}</div>
       <div class="line">N° commande: ${order.order_number}</div>
@@ -78,7 +78,7 @@ export class PrintService {
     return html;
   }
 
-  static async printMultipleTickets(orderId, salesPointId, templateTypes = ['ticket_cuisine', 'ticket_bar', 'ticket_caisse']) {
+  static async printMultipleTickets(orderId, salesPointId, templateTypes = ['fabrication', 'caisse']) {
     const results = [];
 
     for (const templateType of templateTypes) {
