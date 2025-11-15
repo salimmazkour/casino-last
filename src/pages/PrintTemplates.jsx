@@ -10,7 +10,7 @@ const PrintTemplates = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  // Categories management removed
   const [selectedPrinterSalesPoint, setSelectedPrinterSalesPoint] = useState(null);
   const [printerServiceOnline, setPrinterServiceOnline] = useState(true);
   const [formData, setFormData] = useState({
@@ -140,10 +140,7 @@ const PrintTemplates = () => {
       return;
     }
 
-    if (formData.template_type === 'fabrication' && selectedCategories.length === 0) {
-      alert('Veuillez sélectionner au moins une catégorie pour un modèle de fabrication');
-      return;
-    }
+    // Category validation removed
 
     try {
       const dataToSave = {
@@ -165,11 +162,6 @@ const PrintTemplates = () => {
 
         if (error) throw error;
         templateId = editingTemplate.id;
-
-        await supabase
-          .from('print_template_categories')
-          .delete()
-          .eq('print_template_id', templateId);
       } else {
         const { data, error } = await supabase
           .from('print_templates')
@@ -181,18 +173,7 @@ const PrintTemplates = () => {
         templateId = data[0].id;
       }
 
-      if (selectedCategories.length > 0) {
-        const categoryLinks = selectedCategories.map(catId => ({
-          print_template_id: templateId,
-          category_id: catId
-        }));
-
-        const { error: catError } = await supabase
-          .from('print_template_categories')
-          .insert(categoryLinks);
-
-        if (catError) throw catError;
-      }
+      // Category links removed
 
       alert(editingTemplate ? 'Modèle modifié avec succès' : 'Modèle créé avec succès');
       setShowModal(false);
@@ -249,10 +230,7 @@ const PrintTemplates = () => {
       template_content: normalizeTemplateContent(template.template_content)
     });
 
-    const categoryIds = template.print_template_categories
-      .map(ptc => ptc.category_id)
-      .filter(id => id);
-    setSelectedCategories(categoryIds);
+    // Category loading removed
 
     if (template.printer_definitions) {
       const salesPointName = template.printer_definitions.sales_points?.name;
@@ -280,15 +258,7 @@ const PrintTemplates = () => {
     }
   };
 
-  const toggleCategory = (categoryId) => {
-    setSelectedCategories(prev => {
-      if (prev.includes(categoryId)) {
-        return prev.filter(id => id !== categoryId);
-      } else {
-        return [...prev, categoryId];
-      }
-    });
-  };
+  // toggleCategory removed
 
   const resetForm = () => {
     setFormData({
@@ -300,7 +270,6 @@ const PrintTemplates = () => {
       preset_id: '',
       template_content: normalizeTemplateContent(null)
     });
-    setSelectedCategories([]);
     setSelectedPrinterSalesPoint(null);
   };
 
@@ -339,12 +308,7 @@ const PrintTemplates = () => {
         template_content: normalizeTemplateContent(selectedTemplate.template_content)
       });
 
-      if (selectedTemplate.print_template_categories && selectedTemplate.print_template_categories.length > 0) {
-        const categoryIds = selectedTemplate.print_template_categories
-          .map(ptc => ptc.category_id)
-          .filter(id => id);
-        setSelectedCategories(categoryIds);
-      }
+      // Category loading removed
     }
   };
 
@@ -522,32 +486,11 @@ const PrintTemplates = () => {
                 )}
               </div>
 
-              {formData.template_type === 'fabrication' && (
-                <div className="form-group">
-                  <label>Catégories de produits *</label>
-                  <div className="categories-selector">
-                    {categories.map(category => (
-                      <label key={category.id} className="category-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={selectedCategories.includes(category.id)}
-                          onChange={() => toggleCategory(category.id)}
-                        />
-                        <span className="category-label">
-                          {category.icon} {category.name}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                  <small>Sélectionnez les catégories qui doivent imprimer sur cette imprimante</small>
-                </div>
-              )}
-
-              {formData.template_type === 'caisse' && (
-                <div className="info-box">
-                  ℹ️ Les tickets de caisse impriment automatiquement TOUS les produits de la commande
-                </div>
-              )}
+              <div className="info-box">
+                {formData.template_type === 'caisse'
+                  ? 'ℹ️ Les tickets de caisse impriment automatiquement TOUS les produits de la commande'
+                  : 'ℹ️ Les bons de fabrication seront gérés par une autre configuration'}
+              </div>
 
               <div className="template-customization">
                 <h4>🎨 Personnalisation du ticket</h4>
