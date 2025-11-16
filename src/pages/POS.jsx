@@ -1089,6 +1089,7 @@ export default function POS() {
         await PrintService.printMultipleTickets(currentOrderId, selectedSalesPoint.id, ['caisse']);
 
         console.log('[POS] Order updated, print complete');
+        await loadHoldTickets();
         alert('✅ Ticket réimprimé !');
         console.log('[POS] handlePrintTicket - End (success)');
       }
