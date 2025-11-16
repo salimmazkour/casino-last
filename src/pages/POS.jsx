@@ -1043,6 +1043,7 @@ export default function POS() {
       } else {
         console.log('[POS] Re-printing existing order');
         const itemsToCancel = cart.filter(item => item.pendingCancellation);
+        const newItems = cart.filter(item => !item.order_item_id && !item.pendingCancellation);
 
         let updatedItems = cart;
 
@@ -1065,7 +1066,48 @@ export default function POS() {
           updatedItems = result.remainingItems;
         }
 
-        const updatedTotals = calculateTotalsFromItems(updatedItems);
+        if (newItems.length > 0) {
+          console.log(`[POS] Adding ${newItems.length} new item(s) to existing order`);
+
+          const { data: existingOrder } = await supabase
+            .from('orders')
+            .select('order_number')
+            .eq('id', currentOrderId)
+            .single();
+
+          orderNumber = existingOrder.order_number;
+
+          const newOrderItems = newItems.map(item => {
+            const itemTotal = item.unit_price * item.quantity;
+            const itemSubtotal = itemTotal / (1 + (item.tax_rate / 100));
+            const itemTax = itemTotal - itemSubtotal;
+            return {
+              order_id: currentOrderId,
+              product_id: item.product_id,
+              product_name: item.product_name,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              subtotal: itemSubtotal,
+              tax_rate: item.tax_rate,
+              tax_amount: itemTax,
+              total: itemTotal,
+              is_voided: false
+            };
+          });
+
+          const { data: insertedItems, error: insertError } = await supabase
+            .from('order_items')
+            .insert(newOrderItems)
+            .select();
+
+          if (insertError) throw insertError;
+
+          await deductStockFromOrder(insertedItems, orderNumber);
+          await PrintService.printMultipleTickets(currentOrderId, selectedSalesPoint.id, ['fabrication']);
+        }
+
+        const allActiveItems = cart.filter(item => !item.pendingCancellation);
+        const updatedTotals = calculateTotalsFromItems(allActiveItems);
 
         const { data: currentOrder } = await supabase
           .from('orders')
