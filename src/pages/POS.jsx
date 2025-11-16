@@ -1057,6 +1057,8 @@ export default function POS() {
           }
         }
 
+        const updatedTotals = calculateCartTotals();
+
         const { data: currentOrder } = await supabase
           .from('orders')
           .select('print_count, order_number')
@@ -1064,9 +1066,9 @@ export default function POS() {
           .single();
 
         const updateData = {
-          subtotal: totals.subtotal,
-          tax_amount: totals.taxAmount,
-          total_amount: totals.total,
+          subtotal: updatedTotals.subtotal,
+          tax_amount: updatedTotals.taxAmount,
+          total_amount: updatedTotals.total,
           print_count: (currentOrder?.print_count || 0) + 1,
           last_printed_at: new Date().toISOString()
         };
@@ -1213,10 +1215,12 @@ export default function POS() {
           await printProductionSlip(newItems, orderNumber, currentOrderId);
         }
 
+        const updatedTotals = calculateCartTotals();
+
         const updateData = {
-          subtotal: totals.subtotal,
-          tax_amount: totals.taxAmount,
-          total_amount: totals.total,
+          subtotal: updatedTotals.subtotal,
+          tax_amount: updatedTotals.taxAmount,
+          total_amount: updatedTotals.total,
           is_on_hold: true,
           hold_time: new Date().toISOString()
         };
@@ -1420,12 +1424,14 @@ export default function POS() {
           await printProductionSlip(newItems, orderNumber, currentOrderId);
         }
 
+        const updatedTotals = calculateCartTotals();
+
         await supabase
           .from('orders')
           .update({
-            subtotal: totals.subtotal,
-            tax_amount: totals.taxAmount,
-            total_amount: totals.total
+            subtotal: updatedTotals.subtotal,
+            tax_amount: updatedTotals.taxAmount,
+            total_amount: updatedTotals.total
           })
           .eq('id', currentOrderId);
       }
