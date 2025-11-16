@@ -408,7 +408,7 @@ export default function POS() {
   };
 
   const processCancellations = async (itemsToCancel, orderNumber) => {
-    if (itemsToCancel.length === 0) return false;
+    if (itemsToCancel.length === 0) return { fullyCancelled: false, remainingItems: cart };
 
     await printCancellationSlip(itemsToCancel, orderNumber);
 
@@ -464,19 +464,19 @@ export default function POS() {
       setProductionSlipPrinted(false);
       setCancellationSlipPrinted(false);
       await loadHoldTickets();
-      return true;
+      return { fullyCancelled: true, remainingItems: [] };
     } else {
       setCart(remainingItems);
-      return false;
+      return { fullyCancelled: false, remainingItems };
     }
   };
 
-  const calculateCartTotals = () => {
+  const calculateTotalsFromItems = (items) => {
     let total = 0;
     let taxAmount = 0;
     let subtotal = 0;
 
-    cart.filter(item => !item.pendingCancellation).forEach(item => {
+    items.filter(item => !item.pendingCancellation).forEach(item => {
       const itemTotal = item.unit_price * item.quantity;
       total += itemTotal;
 
@@ -493,6 +493,10 @@ export default function POS() {
       taxAmount: parseFloat(taxAmount.toFixed(2)),
       total: parseFloat(total.toFixed(2))
     };
+  };
+
+  const calculateCartTotals = () => {
+    return calculateTotalsFromItems(cart);
   };
 
   const handlePayment = async () => {
@@ -1040,6 +1044,8 @@ export default function POS() {
         console.log('[POS] Re-printing existing order');
         const itemsToCancel = cart.filter(item => item.pendingCancellation);
 
+        let updatedItems = cart;
+
         if (itemsToCancel.length > 0) {
           const { data: existingOrder } = await supabase
             .from('orders')
@@ -1049,15 +1055,17 @@ export default function POS() {
 
           orderNumber = existingOrder.order_number;
 
-          const ticketFullyCancelled = await processCancellations(itemsToCancel, orderNumber);
+          const result = await processCancellations(itemsToCancel, orderNumber);
 
-          if (ticketFullyCancelled) {
+          if (result.fullyCancelled) {
             alert('✅ Ticket entièrement annulé !');
             return;
           }
+
+          updatedItems = result.remainingItems;
         }
 
-        const updatedTotals = calculateCartTotals();
+        const updatedTotals = calculateTotalsFromItems(updatedItems);
 
         const { data: currentOrder } = await supabase
           .from('orders')
@@ -1177,17 +1185,21 @@ export default function POS() {
 
         const itemsToCancel = cart.filter(item => item.pendingCancellation);
 
-        if (itemsToCancel.length > 0) {
-          const ticketFullyCancelled = await processCancellations(itemsToCancel, orderNumber);
+        let updatedItems = cart;
 
-          if (ticketFullyCancelled) {
+        if (itemsToCancel.length > 0) {
+          const result = await processCancellations(itemsToCancel, orderNumber);
+
+          if (result.fullyCancelled) {
             alert('✅ Ticket entièrement annulé !');
             return;
           }
+
+          updatedItems = result.remainingItems;
         }
 
         const existingProductIds = existingOrder.order_items.map(item => item.product_id);
-        const newItems = cart.filter(item =>
+        const newItems = updatedItems.filter(item =>
           !item.pendingCancellation &&
           !existingProductIds.includes(item.product_id)
         );
@@ -1215,7 +1227,7 @@ export default function POS() {
           await printProductionSlip(newItems, orderNumber, currentOrderId);
         }
 
-        const updatedTotals = calculateCartTotals();
+        const updatedTotals = calculateTotalsFromItems(updatedItems);
 
         const updateData = {
           subtotal: updatedTotals.subtotal,
@@ -1386,17 +1398,21 @@ export default function POS() {
 
         const itemsToCancel = cart.filter(item => item.pendingCancellation);
 
-        if (itemsToCancel.length > 0) {
-          const ticketFullyCancelled = await processCancellations(itemsToCancel, orderNumber);
+        let updatedItems = cart;
 
-          if (ticketFullyCancelled) {
+        if (itemsToCancel.length > 0) {
+          const result = await processCancellations(itemsToCancel, orderNumber);
+
+          if (result.fullyCancelled) {
             alert('✅ Ticket entièrement annulé !');
             return;
           }
+
+          updatedItems = result.remainingItems;
         }
 
         const existingProductIds = existingOrder.order_items.map(item => item.product_id);
-        const newItems = cart.filter(item =>
+        const newItems = updatedItems.filter(item =>
           !item.pendingCancellation &&
           !existingProductIds.includes(item.product_id)
         );
@@ -1424,7 +1440,7 @@ export default function POS() {
           await printProductionSlip(newItems, orderNumber, currentOrderId);
         }
 
-        const updatedTotals = calculateCartTotals();
+        const updatedTotals = calculateTotalsFromItems(updatedItems);
 
         await supabase
           .from('orders')
