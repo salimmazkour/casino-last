@@ -467,7 +467,6 @@ export default function POS() {
       return true;
     } else {
       setCart(remainingItems);
-      setCancellationSlipPrinted(true);
       return false;
     }
   };
@@ -1269,6 +1268,8 @@ export default function POS() {
 
       setCart(cartItems);
       setCurrentOrderId(order.id);
+      setProductionSlipPrinted(true);
+      setCancellationSlipPrinted(false);
 
       if (order.tables) {
         setSelectedTable(order.tables);
