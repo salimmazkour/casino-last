@@ -52,6 +52,7 @@ export default function POS() {
   const [showVoidModal, setShowVoidModal] = useState(false);
   const [voidItem, setVoidItem] = useState(null);
   const [voidReason, setVoidReason] = useState('');
+  const [voidQuantity, setVoidQuantity] = useState(1);
   const [showSplitModal, setShowSplitModal] = useState(false);
   const [showHotelTransferModal, setShowHotelTransferModal] = useState(false);
   const [selectedHotelStay, setSelectedHotelStay] = useState(null);
@@ -300,21 +301,52 @@ export default function POS() {
     }
     setVoidItem(item);
     setVoidReason('');
+    setVoidQuantity(item.quantity);
     setShowVoidModal(true);
   };
 
   const confirmVoid = () => {
-    setCart(prevCart =>
-      prevCart.map(item =>
-        item.product_id === voidItem.product_id
-          ? { ...item, pendingCancellation: true, void_reason: voidReason || 'Non spécifiée' }
-          : item
-      )
-    );
+    if (voidQuantity <= 0 || voidQuantity > voidItem.quantity) {
+      alert('Quantité invalide');
+      return;
+    }
+
+    if (voidQuantity === voidItem.quantity) {
+      setCart(prevCart =>
+        prevCart.map(item =>
+          item.product_id === voidItem.product_id
+            ? { ...item, pendingCancellation: true, void_reason: voidReason || 'Non spécifiée', cancelQuantity: voidQuantity }
+            : item
+        )
+      );
+    } else {
+      setCart(prevCart => {
+        const newCart = [];
+        for (const item of prevCart) {
+          if (item.product_id === voidItem.product_id && item === voidItem) {
+            newCart.push({
+              ...item,
+              quantity: item.quantity - voidQuantity
+            });
+            newCart.push({
+              ...item,
+              quantity: voidQuantity,
+              pendingCancellation: true,
+              void_reason: voidReason || 'Non spécifiée',
+              cancelQuantity: voidQuantity
+            });
+          } else {
+            newCart.push(item);
+          }
+        }
+        return newCart;
+      });
+    }
 
     setShowVoidModal(false);
     setVoidItem(null);
     setVoidReason('');
+    setVoidQuantity(1);
   };
 
   const processPendingVoids = async (orderId) => {
@@ -419,20 +451,56 @@ export default function POS() {
     const cancelledOrderItems = [];
 
     for (const item of itemsToCancel) {
-      const { data: orderItem } = await supabase
-        .from('order_items')
-        .select('*')
-        .eq('order_id', currentOrderId)
-        .eq('product_id', item.product_id)
-        .maybeSingle();
+      const cancelQty = item.cancelQuantity || item.quantity;
+
+      let orderItem;
+      if (item.order_item_id) {
+        const { data } = await supabase
+          .from('order_items')
+          .select('*')
+          .eq('id', item.order_item_id)
+          .maybeSingle();
+        orderItem = data;
+      } else {
+        const { data } = await supabase
+          .from('order_items')
+          .select('*')
+          .eq('order_id', currentOrderId)
+          .eq('product_id', item.product_id)
+          .eq('is_voided', false)
+          .maybeSingle();
+        orderItem = data;
+      }
 
       if (orderItem) {
-        cancelledOrderItems.push(orderItem);
+        const itemCancelledQty = cancelQty;
+        const itemRemainingQty = orderItem.quantity - itemCancelledQty;
 
-        await supabase
-          .from('order_items')
-          .update({ is_voided: true })
-          .eq('id', orderItem.id);
+        if (itemRemainingQty > 0) {
+          const newTotal = orderItem.unit_price * itemRemainingQty;
+          const newSubtotal = newTotal / (1 + (orderItem.tax_rate / 100));
+          const newTax = newTotal - newSubtotal;
+
+          await supabase
+            .from('order_items')
+            .update({
+              quantity: itemRemainingQty,
+              subtotal: newSubtotal,
+              tax_amount: newTax,
+              total: newTotal
+            })
+            .eq('id', orderItem.id);
+        } else {
+          await supabase
+            .from('order_items')
+            .update({ is_voided: true })
+            .eq('id', orderItem.id);
+        }
+
+        cancelledOrderItems.push({
+          ...orderItem,
+          quantity: itemCancelledQty
+        });
 
         await supabase
           .from('void_logs')
@@ -440,9 +508,9 @@ export default function POS() {
             order_id: currentOrderId,
             order_item_id: orderItem.id,
             product_name: item.product_name,
-            quantity: item.quantity,
+            quantity: itemCancelledQty,
             unit_price: item.unit_price,
-            total_amount: item.unit_price * item.quantity,
+            total_amount: item.unit_price * itemCancelledQty,
             voided_by: user.id,
             void_reason: item.void_reason,
             sales_point_id: selectedSalesPoint.id
@@ -2364,7 +2432,19 @@ export default function POS() {
         <div className="modal-overlay">
           <div className="modal">
             <h3>Annuler l'article</h3>
-            <p>Article: {voidItem?.product_name}</p>
+            <p><strong>Article:</strong> {voidItem?.product_name}</p>
+            <p><strong>Quantité actuelle:</strong> {voidItem?.quantity}</p>
+            <div className="form-group">
+              <label>Quantité à annuler</label>
+              <input
+                type="number"
+                min="1"
+                max={voidItem?.quantity || 1}
+                value={voidQuantity}
+                onChange={(e) => setVoidQuantity(Math.min(Math.max(1, parseInt(e.target.value) || 1), voidItem?.quantity || 1))}
+                className="form-control"
+              />
+            </div>
             <textarea
               placeholder="Raison de l'annulation (obligatoire)"
               value={voidReason}
@@ -2373,7 +2453,9 @@ export default function POS() {
             />
             <div className="modal-actions">
               <button onClick={() => setShowVoidModal(false)} className="cancel">Annuler</button>
-              <button onClick={confirmVoid} className="confirm danger">Confirmer</button>
+              <button onClick={confirmVoid} className="confirm danger">
+                Annuler {voidQuantity} sur {voidItem?.quantity}
+              </button>
             </div>
           </div>
         </div>
