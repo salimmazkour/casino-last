@@ -2458,27 +2458,6 @@ export default function POS() {
                   onChange={(e) => setVoidQuantity(Math.min(Math.max(1, parseInt(e.target.value) || 1), voidItem?.quantity || 1))}
                   className="void-quantity-input"
                 />
-                <div className="void-quantity-controls">
-                  <button
-                    className="void-quantity-btn"
-                    onClick={() => setVoidQuantity(1)}
-                  >
-                    1
-                  </button>
-                  <button
-                    className="void-quantity-btn"
-                    onClick={() => setVoidQuantity(Math.floor((voidItem?.quantity || 1) / 2))}
-                    disabled={(voidItem?.quantity || 1) < 2}
-                  >
-                    50%
-                  </button>
-                  <button
-                    className="void-quantity-btn"
-                    onClick={() => setVoidQuantity(voidItem?.quantity || 1)}
-                  >
-                    Tout
-                  </button>
-                </div>
               </div>
 
               <div className="void-form-group">
