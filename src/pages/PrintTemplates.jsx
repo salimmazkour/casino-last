@@ -18,6 +18,7 @@ const PrintTemplates = () => {
     template_type: 'fabrication',
     printer_definition_id: '',
     is_active: true,
+    is_cancellation_template: false,
     template_format: 'text',
     preset_id: '',
     template_content: {
@@ -150,6 +151,7 @@ const PrintTemplates = () => {
         template_type: 'fabrication',
         printer_definition_id: formData.printer_definition_id,
         is_active: formData.is_active,
+        is_cancellation_template: formData.is_cancellation_template,
         template_format: formData.template_format,
         template_content: formData.template_content
       };
@@ -230,6 +232,7 @@ const PrintTemplates = () => {
       template_type: template.template_type,
       printer_definition_id: template.printer_definition_id,
       is_active: template.is_active,
+      is_cancellation_template: template.is_cancellation_template || false,
       template_format: template.template_format || 'text',
       template_content: normalizeTemplateContent(template.template_content)
     });
@@ -270,6 +273,7 @@ const PrintTemplates = () => {
       template_type: 'fabrication',
       printer_definition_id: '',
       is_active: true,
+      is_cancellation_template: false,
       template_format: 'text',
       preset_id: '',
       template_content: normalizeTemplateContent(null)
@@ -375,7 +379,14 @@ const PrintTemplates = () => {
                   {getTypeIcon(template.template_type)}
                 </div>
                 <div className="template-info">
-                  <h3>{template.name}</h3>
+                  <h3>
+                    {template.name}
+                    {template.is_cancellation_template && (
+                      <span className="status-badge" style={{marginLeft: '10px', backgroundColor: '#ff9800', color: 'white', fontSize: '11px'}}>
+                        ANNULATION
+                      </span>
+                    )}
+                  </h3>
                   <span className="template-type">{getTypeLabel(template.template_type)}</span>
                 </div>
               </div>
@@ -461,6 +472,20 @@ const PrintTemplates = () => {
                 )}
               </div>
 
+              <div className="form-group-checkbox" style={{marginTop: '15px'}}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.is_cancellation_template}
+                    onChange={e => setFormData({...formData, is_cancellation_template: e.target.checked})}
+                  />
+                  <span style={{fontWeight: 'bold'}}>Modèle d'annulation</span>
+                </label>
+                <small style={{display: 'block', marginTop: '5px', color: '#666'}}>
+                  ℹ️ Si coché, ce modèle sera utilisé pour imprimer les bons d'annulation (lignes ou tickets annulés).
+                  Le nom du point de vente source sera automatiquement affiché.
+                </small>
+              </div>
 
               <div className="template-customization">
                 <h4>🎨 Personnalisation du ticket</h4>

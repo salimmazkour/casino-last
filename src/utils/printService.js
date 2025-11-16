@@ -105,6 +105,45 @@ export class PrintService {
     return results;
   }
 
+  static async printCancellation(orderId, salesPointId, cancelledItems, orderNumber) {
+    try {
+      const printServiceUrl = import.meta.env.VITE_PRINT_SERVICE_URL || 'http://localhost:3001';
+      const printEndpoint = `${printServiceUrl}/api/print-cancellation`;
+
+      const response = await fetch(printEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          order_id: orderId,
+          sales_point_id: salesPointId,
+          cancelled_items: cancelledItems,
+          order_number: orderNumber,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Print cancellation failed');
+      }
+
+      const result = await response.json();
+
+      return {
+        success: true,
+        message: result.message || 'Bon d\'annulation imprimé',
+      };
+    } catch (error) {
+      console.error('Error printing cancellation:', error);
+      return {
+        success: false,
+        message: error.message,
+        error,
+      };
+    }
+  }
+
   static async checkService() {
     try {
       const printServiceUrl = import.meta.env.VITE_PRINT_SERVICE_URL || 'http://localhost:3001';

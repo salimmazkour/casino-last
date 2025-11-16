@@ -382,8 +382,29 @@ export default function POS() {
   };
 
   const printCancellationSlip = async (items, orderNumber) => {
-    console.log('🖨️ BON D\'ANNULATION:', { orderNumber, items });
-    await new Promise(resolve => setTimeout(resolve, 300));
+    console.log('🖨️ BON D\'ANNULATION:', { orderNumber, items, orderId: currentOrderId });
+
+    if (!currentOrderId) {
+      console.warn('⚠️ Pas d\'order_id disponible pour le bon d\'annulation');
+      return;
+    }
+
+    try {
+      const result = await PrintService.printCancellation(
+        currentOrderId,
+        selectedSalesPoint.id,
+        items,
+        orderNumber
+      );
+
+      if (result.success) {
+        console.log('✅ Bon d\'annulation imprimé avec succès');
+      } else {
+        console.error('❌ Échec impression bon d\'annulation:', result.message);
+      }
+    } catch (error) {
+      console.error('❌ Erreur impression bon d\'annulation:', error);
+    }
   };
 
   const processCancellations = async (itemsToCancel, orderNumber) => {
@@ -1595,6 +1616,15 @@ export default function POS() {
 
       if (itemsError) throw itemsError;
       console.log('Articles trouvés:', orderItems);
+
+      console.log('Impression du bon d\'annulation...');
+      const cartItems = orderItems.map(item => ({
+        product_name: item.product_name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        void_reason: 'Annulation ticket complet'
+      }));
+      await printCancellationSlip(cartItems, order.order_number);
 
       console.log('Restauration du stock...');
       await restoreStockFromOrder(orderItems, order.order_number);
