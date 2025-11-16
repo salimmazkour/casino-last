@@ -147,7 +147,7 @@ const PrintTemplates = () => {
     try {
       const dataToSave = {
         name: formData.name,
-        template_type: formData.template_type,
+        template_type: 'fabrication',
         printer_definition_id: formData.printer_definition_id,
         is_active: formData.is_active,
         template_format: formData.template_format,
@@ -438,17 +438,6 @@ const PrintTemplates = () => {
                   />
                 </div>
 
-                <div className="form-group">
-                  <label>Type de modèle *</label>
-                  <select
-                    value={formData.template_type}
-                    onChange={e => setFormData({...formData, template_type: e.target.value})}
-                    required
-                  >
-                    <option value="fabrication">Fabrication</option>
-                    <option value="caisse">Ticket de Caisse</option>
-                  </select>
-                </div>
               </div>
 
               <div className="form-group">
@@ -472,11 +461,6 @@ const PrintTemplates = () => {
                 )}
               </div>
 
-              <div className="info-box">
-                {formData.template_type === 'caisse'
-                  ? 'ℹ️ Les tickets de caisse impriment automatiquement TOUS les produits de la commande'
-                  : 'ℹ️ Les bons de fabrication seront gérés par une autre configuration'}
-              </div>
 
               <div className="template-customization">
                 <h4>🎨 Personnalisation du ticket</h4>

@@ -574,6 +574,40 @@ export default function POS() {
             amount: parseFloat(amount)
           }]);
 
+          if (method === 'client_account' && selectedClient) {
+            const { data: client } = await supabase
+              .from('clients')
+              .select('current_balance')
+              .eq('id', selectedClient.id)
+              .single();
+
+            const newBalance = parseFloat(client.current_balance) - parseFloat(amount);
+
+            await supabase
+              .from('clients')
+              .update({ current_balance: newBalance })
+              .eq('id', selectedClient.id);
+
+            await supabase
+              .from('client_payments')
+              .insert([{
+                client_id: selectedClient.id,
+                order_id: orderId,
+                payment_type: 'purchase',
+                amount: parseFloat(amount),
+                description: `Achat - Commande ${orderNumber}`,
+                sales_point_id: selectedSalesPoint.id,
+                processed_by: user.id
+              }]);
+
+            console.log('Solde client mis à jour:', {
+              client_id: selectedClient.id,
+              old_balance: client.current_balance,
+              amount: parseFloat(amount),
+              new_balance: newBalance
+            });
+          }
+
           if (method === 'hotel_transfer' && selectedHotelStay) {
             console.log('Transfert hôtel - Création charge:', {
               stay_id: selectedHotelStay.id,
@@ -642,6 +676,7 @@ export default function POS() {
       }
 
       await loadHoldTickets();
+      await loadClients();
 
       await logAction({
         employee_id: user.id,
@@ -1199,14 +1234,17 @@ export default function POS() {
 
       if (orderError) throw orderError;
 
-      const cartItems = order.order_items.map(item => ({
-        product_id: item.product_id,
-        product_name: item.product_name,
-        unit_price: item.unit_price,
-        unit_price_ht: item.subtotal / item.quantity,
-        quantity: item.quantity,
-        tax_rate: item.tax_rate
-      }));
+      const cartItems = order.order_items
+        .filter(item => !item.is_voided)
+        .map(item => ({
+          product_id: item.product_id,
+          product_name: item.product_name,
+          unit_price: item.unit_price,
+          unit_price_ht: item.subtotal / item.quantity,
+          quantity: item.quantity,
+          tax_rate: item.tax_rate,
+          pendingCancellation: false
+        }));
 
       setCart(cartItems);
       setCurrentOrderId(order.id);
