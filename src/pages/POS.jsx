@@ -254,11 +254,15 @@ export default function POS() {
   };
 
   const addToCart = (product) => {
-    const existingItem = cart.find(item => item.product_id === product.id);
+    const existingItem = cart.find(item =>
+      item.product_id === product.id &&
+      !item.order_item_id &&
+      !item.pendingCancellation
+    );
 
     if (existingItem) {
       setCart(cart.map(item =>
-        item.product_id === product.id
+        item.product_id === product.id && !item.order_item_id && !item.pendingCancellation
           ? { ...item, quantity: item.quantity + 1 }
           : item
       ));
@@ -1106,8 +1110,17 @@ export default function POS() {
           await PrintService.printMultipleTickets(currentOrderId, selectedSalesPoint.id, ['fabrication']);
         }
 
-        const allActiveItems = cart.filter(item => !item.pendingCancellation);
-        const updatedTotals = calculateTotalsFromItems(allActiveItems);
+        const { data: allOrderItems } = await supabase
+          .from('order_items')
+          .select('*')
+          .eq('order_id', currentOrderId)
+          .eq('is_voided', false);
+
+        const updatedTotals = {
+          total: allOrderItems.reduce((sum, item) => sum + parseFloat(item.total), 0),
+          taxAmount: allOrderItems.reduce((sum, item) => sum + parseFloat(item.tax_amount || 0), 0),
+          subtotal: allOrderItems.reduce((sum, item) => sum + parseFloat(item.subtotal), 0)
+        };
 
         const { data: currentOrder } = await supabase
           .from('orders')
