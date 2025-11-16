@@ -2430,31 +2430,74 @@ export default function POS() {
 
       {showVoidModal && (
         <div className="modal-overlay">
-          <div className="modal">
-            <h3>Annuler l'article</h3>
-            <p><strong>Article:</strong> {voidItem?.product_name}</p>
-            <p><strong>Quantité actuelle:</strong> {voidItem?.quantity}</p>
-            <div className="form-group">
-              <label>Quantité à annuler</label>
-              <input
-                type="number"
-                min="1"
-                max={voidItem?.quantity || 1}
-                value={voidQuantity}
-                onChange={(e) => setVoidQuantity(Math.min(Math.max(1, parseInt(e.target.value) || 1), voidItem?.quantity || 1))}
-                className="form-control"
-              />
+          <div className="void-modal">
+            <div className="void-modal-header">
+              <div className="void-modal-icon">⚠️</div>
+              <h3>Annulation d'article</h3>
             </div>
-            <textarea
-              placeholder="Raison de l'annulation (obligatoire)"
-              value={voidReason}
-              onChange={(e) => setVoidReason(e.target.value)}
-              rows="3"
-            />
-            <div className="modal-actions">
-              <button onClick={() => setShowVoidModal(false)} className="cancel">Annuler</button>
-              <button onClick={confirmVoid} className="confirm danger">
-                Annuler {voidQuantity} sur {voidItem?.quantity}
+
+            <div className="void-modal-body">
+              <div className="void-item-info">
+                <div className="void-item-name">
+                  {voidItem?.product_name}
+                  <span className="void-item-badge">ANNULATION</span>
+                </div>
+                <div className="void-quantity-info">
+                  <span className="void-quantity-label">Quantité actuelle</span>
+                  <span className="void-quantity-value">{voidItem?.quantity}</span>
+                </div>
+              </div>
+
+              <div className="void-form-group">
+                <label>Quantité à annuler</label>
+                <input
+                  type="number"
+                  min="1"
+                  max={voidItem?.quantity || 1}
+                  value={voidQuantity}
+                  onChange={(e) => setVoidQuantity(Math.min(Math.max(1, parseInt(e.target.value) || 1), voidItem?.quantity || 1))}
+                  className="void-quantity-input"
+                />
+                <div className="void-quantity-controls">
+                  <button
+                    className="void-quantity-btn"
+                    onClick={() => setVoidQuantity(1)}
+                  >
+                    1
+                  </button>
+                  <button
+                    className="void-quantity-btn"
+                    onClick={() => setVoidQuantity(Math.floor((voidItem?.quantity || 1) / 2))}
+                    disabled={(voidItem?.quantity || 1) < 2}
+                  >
+                    50%
+                  </button>
+                  <button
+                    className="void-quantity-btn"
+                    onClick={() => setVoidQuantity(voidItem?.quantity || 1)}
+                  >
+                    Tout
+                  </button>
+                </div>
+              </div>
+
+              <div className="void-form-group">
+                <label>Raison de l'annulation *</label>
+                <textarea
+                  placeholder="Veuillez préciser la raison de cette annulation..."
+                  value={voidReason}
+                  onChange={(e) => setVoidReason(e.target.value)}
+                  className="void-reason-textarea"
+                />
+              </div>
+            </div>
+
+            <div className="void-modal-footer">
+              <button onClick={() => setShowVoidModal(false)} className="void-btn-cancel">
+                Annuler
+              </button>
+              <button onClick={confirmVoid} className="void-btn-confirm">
+                Confirmer l'annulation ({voidQuantity}/{voidItem?.quantity})
               </button>
             </div>
           </div>
