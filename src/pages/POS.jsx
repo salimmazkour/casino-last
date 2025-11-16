@@ -1905,7 +1905,7 @@ export default function POS() {
                       <td>{new Date(ticket.hold_time || ticket.created_at).toLocaleString()}</td>
                       <td>{ticket.restaurant_tables ? `Table ${ticket.restaurant_tables.table_number}` : '-'}</td>
                       <td>{ticket.clients ? (ticket.clients.type === 'company' ? ticket.clients.company_name : `${ticket.clients.first_name || ''} ${ticket.clients.last_name || ''}`.trim()) : '-'}</td>
-                      <td>{ticket.order_items?.length || 0} article(s)</td>
+                      <td>{ticket.order_items?.filter(item => !item.is_voided).length || 0} article(s)</td>
                       <td className="ticket-amount">{parseFloat(ticket.total_amount).toFixed(0)} FCFA</td>
                       <td><span className="status-badge status-hold">En attente</span></td>
                     </tr>
@@ -1919,7 +1919,7 @@ export default function POS() {
                       <td>{new Date(ticket.created_at).toLocaleString()}</td>
                       <td>{ticket.restaurant_tables ? `Table ${ticket.restaurant_tables.table_number}` : '-'}</td>
                       <td>{ticket.clients ? (ticket.clients.type === 'company' ? ticket.clients.company_name : `${ticket.clients.first_name || ''} ${ticket.clients.last_name || ''}`.trim()) : '-'}</td>
-                      <td>{ticket.order_items?.length || 0} article(s)</td>
+                      <td>{ticket.order_items?.filter(item => !item.is_voided).length || 0} article(s)</td>
                       <td className="ticket-amount">{parseFloat(ticket.total_amount).toFixed(0)} FCFA</td>
                       <td><span className="status-badge status-paid">Encaissé</span></td>
                     </tr>
@@ -1933,7 +1933,7 @@ export default function POS() {
                       <td>{new Date(ticket.created_at).toLocaleString()}</td>
                       <td>{ticket.restaurant_tables ? `Table ${ticket.restaurant_tables.table_number}` : '-'}</td>
                       <td>{ticket.clients ? (ticket.clients.type === 'company' ? ticket.clients.company_name : `${ticket.clients.first_name || ''} ${ticket.clients.last_name || ''}`.trim()) : '-'}</td>
-                      <td>{ticket.order_items?.length || 0} article(s)</td>
+                      <td>{ticket.order_items?.filter(item => !item.is_voided).length || 0} article(s)</td>
                       <td className="ticket-amount">{parseFloat(ticket.total_amount).toFixed(0)} FCFA</td>
                       <td><span className="status-badge status-voided">Annulé</span></td>
                     </tr>
