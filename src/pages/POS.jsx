@@ -1040,7 +1040,7 @@ export default function POS() {
         console.log('[POS] Re-printing existing order');
         const itemsToCancel = cart.filter(item => item.pendingCancellation);
 
-        if (itemsToCancel.length > 0 && !cancellationSlipPrinted) {
+        if (itemsToCancel.length > 0) {
           const { data: existingOrder } = await supabase
             .from('orders')
             .select('order_number')
