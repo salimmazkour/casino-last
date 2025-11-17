@@ -1105,6 +1105,11 @@ export default function POS() {
         await deductStockFromOrder(insertedItems, order.order_number);
         await PrintService.printMultipleTickets(order.id, selectedSalesPoint.id, ['fabrication', 'caisse']);
 
+        setCart([]);
+        setCurrentOrderId(null);
+        setProductionSlipPrinted(false);
+        setCancellationSlipPrinted(false);
+
         console.log('[POS] New order created and printed');
         alert('✅ Ticket imprimé et envoyé en cuisine !');
       } else {
