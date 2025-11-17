@@ -1150,7 +1150,23 @@ export default function POS() {
             return;
           }
 
-          updatedItems = result.remainingItems;
+          const { data: freshOrderItems } = await supabase
+            .from('order_items')
+            .select('*')
+            .eq('order_id', currentOrderId)
+            .eq('is_voided', false);
+
+          const freshCart = freshOrderItems.map(item => ({
+            product_id: item.product_id,
+            product_name: item.product_name,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            tax_rate: item.tax_rate || 0,
+            order_item_id: item.id
+          }));
+
+          setCart(freshCart);
+          updatedItems = freshCart;
         }
 
         if (newItems.length > 0) {
