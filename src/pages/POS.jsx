@@ -261,35 +261,19 @@ export default function POS() {
   };
 
   const addToCart = (product) => {
-    const existingNewItem = cart.find(item =>
+    const existingItemIndex = cart.findIndex(item =>
       item.product_id === product.id &&
-      !item.order_item_id &&
       !item.pendingCancellation &&
       !item.partialVoid
     );
 
-    if (existingNewItem) {
-      setCart(cart.map(item =>
-        item === existingNewItem
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      ));
-      return;
-    }
-
-    const existingOrderItem = cart.find(item =>
-      item.product_id === product.id &&
-      item.order_item_id &&
-      !item.pendingCancellation &&
-      !item.partialVoid
-    );
-
-    if (existingOrderItem) {
-      setCart(cart.map(item =>
-        item === existingOrderItem
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      ));
+    if (existingItemIndex !== -1) {
+      const newCart = [...cart];
+      newCart[existingItemIndex] = {
+        ...newCart[existingItemIndex],
+        quantity: newCart[existingItemIndex].quantity + 1
+      };
+      setCart(newCart);
     } else {
       setCart([...cart, {
         product_id: product.id,
