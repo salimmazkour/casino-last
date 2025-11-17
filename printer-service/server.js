@@ -283,8 +283,9 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
       doc.fontSize(9).text(`Table: ${orderData.table_name}`);
     }
 
-    if (templateContent.showClientName && orderData.client_name) {
-      doc.fontSize(9).text(`Client: ${orderData.client_name}`);
+    if (templateContent.showClientName) {
+      const displayName = orderData.client_name || '(Non spécifié)';
+      doc.fontSize(9).text(`Client: ${displayName}`);
     }
 
     doc.moveDown(0.5);
