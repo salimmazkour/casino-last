@@ -491,7 +491,7 @@ export default function Users() {
                 </div>
 
                 <div className="form-group">
-                  <label>Taux horaire (€)</label>
+                  <label>Taux horaire (FCFA)</label>
                   <input
                     type="number"
                     step="0.01"

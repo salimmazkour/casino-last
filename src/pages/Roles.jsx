@@ -195,7 +195,7 @@ const Roles = () => {
                 </div>
                 {(role.personal_offer_limit > 0 || role.personal_offer_max_amount > 0) && (
                   <p className="role-offers">
-                    🎁 Offerts: {role.personal_offer_limit || 0}/jour · Max {role.personal_offer_max_amount || 0}€
+                    🎁 Offerts: {role.personal_offer_limit || 0}/jour · Max {role.personal_offer_max_amount || 0} FCFA
                   </p>
                 )}
               </div>
@@ -303,7 +303,7 @@ const Roles = () => {
                   value={formData.personal_offer_max_amount}
                   onChange={(e) => setFormData({ ...formData, personal_offer_max_amount: parseFloat(e.target.value) || 0 })}
                 />
-                <small>Montant maximum par offert en € (0 = pas de limite)</small>
+                <small>Montant maximum par offert en FCFA (0 = pas de limite)</small>
               </div>
 
               <div className="form-group">

@@ -67,12 +67,12 @@ export class PrintService {
     `;
 
     items.forEach(item => {
-      html += `<div class="line">${item.quantity}x ${item.product_name} - ${item.unit_price.toFixed(2)}€</div>`;
+      html += `<div class="line">${item.quantity}x ${item.product_name} - ${item.unit_price.toFixed(2)} FCFA</div>`;
     });
 
     html += `
       <div class="separator"></div>
-      <div class="total">TOTAL: ${order.total_amount.toFixed(2)}€</div>
+      <div class="total">TOTAL: ${order.total_amount.toFixed(2)} FCFA</div>
     `;
 
     return html;

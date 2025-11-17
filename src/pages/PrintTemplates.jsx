@@ -1059,17 +1059,17 @@ const PrintTemplates = () => {
                         fontWeight: formData.template_content.textStyles?.body?.bold ? 'bold' : 'normal',
                         fontSize: `${formData.template_content.textStyles?.body?.size || 10}px`,
                         textAlign: formData.template_content.textStyles?.body?.align || 'left'
-                      }}>2x Hamburger............15.00€</div>
+                      }}>2x Hamburger............15.00 FCFA</div>
                       <div className="preview-line" style={{
                         fontWeight: formData.template_content.textStyles?.body?.bold ? 'bold' : 'normal',
                         fontSize: `${formData.template_content.textStyles?.body?.size || 10}px`,
                         textAlign: formData.template_content.textStyles?.body?.align || 'left'
-                      }}>1x Coca-Cola............. 2.50€</div>
+                      }}>1x Coca-Cola............. 2.50 FCFA</div>
                       <div className="preview-line" style={{
                         fontWeight: formData.template_content.textStyles?.body?.bold ? 'bold' : 'normal',
                         fontSize: `${formData.template_content.textStyles?.body?.size || 10}px`,
                         textAlign: formData.template_content.textStyles?.body?.align || 'left'
-                      }}>1x Café.................. 1.50€</div>
+                      }}>1x Café.................. 1.50 FCFA</div>
                     </>
                   ) : (
                     <>
@@ -1092,7 +1092,7 @@ const PrintTemplates = () => {
                   )}
                   <div className="preview-separator">================================</div>
                   {formData.template_content.showPrices !== false && (
-                    <div className="preview-total">TOTAL: 19.00€</div>
+                    <div className="preview-total">TOTAL: 19.00 FCFA</div>
                   )}
                   {formData.template_content.footer && (
                     <>
