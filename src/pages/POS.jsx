@@ -311,37 +311,30 @@ export default function POS() {
       return;
     }
 
-    if (voidQuantity === voidItem.quantity) {
-      setCart(prevCart =>
-        prevCart.map(item =>
-          item.product_id === voidItem.product_id
-            ? { ...item, pendingCancellation: true, void_reason: voidReason || 'Non spécifiée', cancelQuantity: voidQuantity }
-            : item
-        )
-      );
-    } else {
-      setCart(prevCart => {
-        const newCart = [];
-        for (const item of prevCart) {
-          if (item.product_id === voidItem.product_id && item === voidItem) {
-            newCart.push({
+    setCart(prevCart =>
+      prevCart.map(item => {
+        if (item === voidItem) {
+          if (voidQuantity === item.quantity) {
+            return {
               ...item,
-              quantity: item.quantity - voidQuantity
-            });
-            newCart.push({
-              ...item,
-              quantity: voidQuantity,
               pendingCancellation: true,
               void_reason: voidReason || 'Non spécifiée',
               cancelQuantity: voidQuantity
-            });
+            };
           } else {
-            newCart.push(item);
+            return {
+              ...item,
+              quantity: item.quantity - voidQuantity,
+              partialVoid: {
+                quantity: voidQuantity,
+                reason: voidReason || 'Non spécifiée'
+              }
+            };
           }
         }
-        return newCart;
-      });
-    }
+        return item;
+      })
+    );
 
     setShowVoidModal(false);
     setVoidItem(null);
@@ -1115,11 +1108,12 @@ export default function POS() {
       } else {
         console.log('[POS] Re-printing existing order');
         const itemsToCancel = cart.filter(item => item.pendingCancellation);
-        const newItems = cart.filter(item => !item.order_item_id && !item.pendingCancellation);
+        const itemsWithPartialVoid = cart.filter(item => item.partialVoid);
+        const newItems = cart.filter(item => !item.order_item_id && !item.pendingCancellation && !item.partialVoid);
 
         let updatedItems = cart;
 
-        if (itemsToCancel.length > 0) {
+        if (itemsToCancel.length > 0 || itemsWithPartialVoid.length > 0) {
           const { data: existingOrder } = await supabase
             .from('orders')
             .select('order_number')
@@ -1128,7 +1122,21 @@ export default function POS() {
 
           orderNumber = existingOrder.order_number;
 
-          const result = await processCancellations(itemsToCancel, orderNumber);
+          const allCancellations = [
+            ...itemsToCancel,
+            ...itemsWithPartialVoid.map(item => ({
+              ...item,
+              product_name: item.product_name,
+              unit_price: item.unit_price,
+              quantity: item.partialVoid.quantity,
+              pendingCancellation: true,
+              void_reason: item.partialVoid.reason,
+              cancelQuantity: item.partialVoid.quantity,
+              order_item_id: item.order_item_id
+            }))
+          ];
+
+          const result = await processCancellations(allCancellations, orderNumber);
 
           if (result.fullyCancelled) {
             alert('✅ Ticket entièrement annulé !');
@@ -1394,6 +1402,8 @@ export default function POS() {
 
       if (orderError) throw orderError;
 
+      console.log('[LOAD_TICKET] order_items from DB:', order.order_items);
+
       const cartItems = order.order_items
         .filter(item => !item.is_voided)
         .map(item => ({
@@ -1403,9 +1413,11 @@ export default function POS() {
           unit_price_ht: item.subtotal / item.quantity,
           quantity: item.quantity,
           tax_rate: item.tax_rate,
-          pendingCancellation: false
+          pendingCancellation: false,
+          order_item_id: item.id
         }));
 
+      console.log('[LOAD_TICKET] cartItems after filter/map:', cartItems);
       setCart(cartItems);
       setCurrentOrderId(order.id);
       setProductionSlipPrinted(true);
@@ -1907,14 +1919,17 @@ export default function POS() {
               {cart.length === 0 ? (
                 <div className="ticket-empty">Aucun article</div>
               ) : (
-                cart.map(item => (
-                  <div key={item.product_id} className={`ticket-item ${item.pendingCancellation ? 'pending-cancel' : ''}`}>
-                    <div className="ticket-item-qty">{item.quantity}</div>
+                cart.map((item, idx) => (
+                  <div key={`${item.product_id}-${idx}`} className={`ticket-item ${item.pendingCancellation || item.partialVoid ? 'pending-cancel' : ''}`}>
+                    <div className="ticket-item-qty">
+                      {item.quantity}
+                      {item.partialVoid && <span style={{fontSize: '10px', color: '#ef4444'}}> (-{item.partialVoid.quantity})</span>}
+                    </div>
                     <div className="ticket-item-name">{item.product_name}</div>
                     <div className="ticket-item-price">{item.unit_price.toFixed(0)}</div>
                     <div className="ticket-item-actions">
                       {currentOrderId ? (
-                        <button onClick={() => initiateVoid(item)} className="ticket-item-void" disabled={item.pendingCancellation}>
+                        <button onClick={() => initiateVoid(item)} className="ticket-item-void" disabled={item.pendingCancellation || item.partialVoid}>
                           ANNULER
                         </button>
                       ) : (
