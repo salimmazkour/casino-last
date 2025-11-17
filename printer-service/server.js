@@ -483,6 +483,134 @@ app.post('/api/print', async (req, res) => {
   }
 });
 
+app.post('/api/print-cancellation', async (req, res) => {
+  try {
+    const { order_id, sales_point_id, cancelled_items, order_number } = req.body;
+
+    if (!order_id || !cancelled_items || cancelled_items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'order_id et cancelled_items sont requis'
+      });
+    }
+
+    console.log(`📝 Impression bon d'annulation pour commande #${order_id}...`);
+    console.log(`🏪 Point de vente ID: ${sales_point_id}`);
+    console.log(`🗑️  Articles annulés: ${cancelled_items.length}`);
+
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        restaurant_tables (table_number),
+        sales_points (name),
+        clients (first_name, last_name)
+      `)
+      .eq('id', order_id)
+      .single();
+
+    if (orderError) throw orderError;
+    if (!order) throw new Error('Commande introuvable');
+
+    const { data: template, error: templateError } = await supabase
+      .from('print_templates')
+      .select(`
+        template_content,
+        printer_definition_id,
+        printer_definitions!printer_definition_id (
+          name,
+          physical_printer_name,
+          sales_point_id
+        )
+      `)
+      .eq('template_type', 'fabrication')
+      .eq('is_active', true)
+      .eq('is_cancellation_template', true)
+      .maybeSingle();
+
+    if (templateError) {
+      console.warn(`⚠️ Erreur récupération template annulation: ${templateError.message}`);
+    }
+
+    if (!template || !template.printer_definitions) {
+      console.warn('⚠️ Aucun template d\'annulation configuré, impression ignorée');
+      return res.json({
+        success: true,
+        message: 'Aucun template d\'annulation configuré'
+      });
+    }
+
+    console.log('📋 Template annulation récupéré:', JSON.stringify(template, null, 2));
+
+    const templateContent = template.template_content || {};
+
+    const clientName = order.clients
+      ? `${order.clients.first_name || ''} ${order.clients.last_name || ''}`.trim()
+      : '';
+
+    const orderData = {
+      id: order.id,
+      order_number: order_number || order.order_number,
+      table_name: order.restaurant_tables?.table_number,
+      sales_point_name: order.sales_points?.name,
+      client_name: clientName,
+      total_amount: 0,
+      items: cancelled_items.map(item => ({
+        quantity: item.cancelQuantity || item.quantity,
+        unit_price: item.unit_price,
+        product_name: item.product_name,
+        notes: item.void_reason || item.notes
+      }))
+    };
+
+    orderData.total_amount = orderData.items.reduce((sum, item) =>
+      sum + (item.quantity * item.unit_price), 0
+    );
+
+    console.log(`📄 Génération PDF bon d'annulation...`);
+    const pdfPath = await generateTicketPDF(orderData, 'fabrication', templateContent);
+
+    const printerDef = template.printer_definitions;
+
+    if (sales_point_id && printerDef.sales_point_id !== sales_point_id) {
+      console.warn(`⚠️ L'imprimante d'annulation n'est pas associée au point de vente`);
+    }
+
+    const physicalPrinter = printerDef.physical_printer_name || printerDef.name;
+
+    if (!physicalPrinter) {
+      throw new Error(`Aucune imprimante physique définie pour le bon d'annulation`);
+    }
+
+    console.log(`🖨️  Impression bon d'annulation sur: ${physicalPrinter}`);
+    console.log(`📄 Fichier: ${pdfPath}`);
+
+    await print(pdfPath, { printer: physicalPrinter });
+
+    setTimeout(() => {
+      try {
+        fs.unlinkSync(pdfPath);
+        console.log(`🗑️  Fichier temporaire supprimé`);
+      } catch (err) {
+        console.error('⚠️  Erreur suppression fichier:', err.message);
+      }
+    }, 5000);
+
+    console.log(`✅ Bon d'annulation imprimé avec succès`);
+    res.json({
+      success: true,
+      message: 'Bon d\'annulation imprimé avec succès'
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur impression bon d\'annulation:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 loadPrinterMapping();
 
 app.listen(PORT, () => {
