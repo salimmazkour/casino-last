@@ -776,6 +776,8 @@ export default function POS() {
         pos_id: selectedSalesPoint.id
       });
 
+      const clientForMessage = selectedClient;
+
       setShowPayment(false);
       setCart([]);
       setPaymentMethods({});
@@ -784,10 +786,10 @@ export default function POS() {
       setCurrentOrderId(null);
       setSelectedHotelStay(null);
 
-      if (selectedClient) {
-        const clientName = selectedClient.type === 'company'
-          ? selectedClient.company_name
-          : `${selectedClient.first_name || ''} ${selectedClient.last_name || ''}`.trim() || 'Client';
+      if (clientForMessage) {
+        const clientName = clientForMessage.type === 'company'
+          ? clientForMessage.company_name
+          : `${clientForMessage.first_name || ''} ${clientForMessage.last_name || ''}`.trim() || 'Client';
         alert(`Vente validée !\nCommande N° ${orderNumber}\nClient: ${clientName}\nMontant: ${totals.total.toFixed(0)} FCFA`);
       } else {
         alert(`Vente validée !\nCommande N° ${orderNumber}\nMontant: ${totals.total.toFixed(0)} FCFA`);
@@ -1395,8 +1397,6 @@ export default function POS() {
       }
 
       setCart([]);
-      setSelectedClient(null);
-      setSelectedTable(null);
       setCurrentOrderId(null);
       setProductionSlipPrinted(false);
       setCancellationSlipPrinted(false);
