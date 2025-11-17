@@ -364,6 +364,7 @@ app.post('/api/print', async (req, res) => {
     }
 
     console.log(`📝 Récupération commande #${order_id} pour ${template_type}...`);
+    console.log(`🏪 Point de vente ID: ${sales_point_id}`);
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -404,6 +405,8 @@ app.post('/api/print', async (req, res) => {
     if (templateError) {
       console.warn(`⚠️ Erreur récupération template: ${templateError.message}`);
     }
+
+    console.log('📋 Template récupéré:', JSON.stringify(template, null, 2));
 
     const templateContent = template?.template_content || {};
 
