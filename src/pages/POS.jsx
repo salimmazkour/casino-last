@@ -562,6 +562,8 @@ export default function POS() {
 
       setCart([]);
       setCurrentOrderId(null);
+      setSelectedTable(null);
+      setSelectedClient(null);
       setProductionSlipPrinted(false);
       setCancellationSlipPrinted(false);
       await loadHoldTickets();
