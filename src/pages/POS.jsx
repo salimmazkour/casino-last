@@ -535,6 +535,16 @@ export default function POS() {
     const remainingItems = cart.filter(item => !item.pendingCancellation);
 
     if (remainingItems.length === 0) {
+      const { data: orderToCancel, error: orderFetchError } = await supabase
+        .from('orders')
+        .select('table_id')
+        .eq('id', currentOrderId)
+        .single();
+
+      if (orderFetchError) {
+        console.error('Erreur récupération commande pour libération table:', orderFetchError);
+      }
+
       await supabase
         .from('orders')
         .update({
@@ -542,6 +552,15 @@ export default function POS() {
           payment_status: 'cancelled'
         })
         .eq('id', currentOrderId);
+
+      if (orderToCancel?.table_id) {
+        console.log('Libération de la table après annulation complète...');
+        await supabase
+          .from('restaurant_tables')
+          .update({ status: 'available', current_order_id: null })
+          .eq('id', orderToCancel.table_id);
+        await loadTables();
+      }
 
       setCart([]);
       setCurrentOrderId(null);
@@ -1907,12 +1926,29 @@ export default function POS() {
       await restoreStockFromOrder(orderItems, order.order_number);
 
       console.log('Mise à jour du statut de la commande...');
+      const { data: orderToCancel, error: orderFetchError } = await supabase
+        .from('orders')
+        .select('table_id')
+        .eq('id', currentOrderId)
+        .single();
+
+      if (orderFetchError) throw orderFetchError;
+
       const { error: updateError } = await supabase
         .from('orders')
         .update({ status: 'voided', payment_status: 'voided' })
         .eq('id', currentOrderId);
 
       if (updateError) throw updateError;
+
+      if (orderToCancel?.table_id) {
+        console.log('Libération de la table...');
+        await supabase
+          .from('restaurant_tables')
+          .update({ status: 'available', current_order_id: null })
+          .eq('id', orderToCancel.table_id);
+        await loadTables();
+      }
 
       setCart([]);
       setCurrentOrderId(null);
