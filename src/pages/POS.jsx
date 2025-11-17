@@ -1316,11 +1316,26 @@ export default function POS() {
         orderNumber = existingOrder.order_number;
 
         const itemsToCancel = cart.filter(item => item.pendingCancellation);
+        const itemsWithPartialVoid = cart.filter(item => item.partialVoid);
 
         let updatedItems = cart;
 
-        if (itemsToCancel.length > 0) {
-          const result = await processCancellations(itemsToCancel, orderNumber);
+        if (itemsToCancel.length > 0 || itemsWithPartialVoid.length > 0) {
+          const allCancellations = [
+            ...itemsToCancel,
+            ...itemsWithPartialVoid.map(item => ({
+              ...item,
+              product_name: item.product_name,
+              unit_price: item.unit_price,
+              quantity: item.partialVoid.quantity,
+              pendingCancellation: true,
+              void_reason: item.partialVoid.reason,
+              cancelQuantity: item.partialVoid.quantity,
+              order_item_id: item.order_item_id
+            }))
+          ];
+
+          const result = await processCancellations(allCancellations, orderNumber);
 
           if (result.fullyCancelled) {
             alert('✅ Ticket entièrement annulé !');
@@ -1333,6 +1348,7 @@ export default function POS() {
         const existingProductIds = existingOrder.order_items.map(item => item.product_id);
         const newItems = updatedItems.filter(item =>
           !item.pendingCancellation &&
+          !item.partialVoid &&
           !existingProductIds.includes(item.product_id)
         );
 
@@ -1533,11 +1549,26 @@ export default function POS() {
         const orderNumber = existingOrder.order_number;
 
         const itemsToCancel = cart.filter(item => item.pendingCancellation);
+        const itemsWithPartialVoid = cart.filter(item => item.partialVoid);
 
         let updatedItems = cart;
 
-        if (itemsToCancel.length > 0) {
-          const result = await processCancellations(itemsToCancel, orderNumber);
+        if (itemsToCancel.length > 0 || itemsWithPartialVoid.length > 0) {
+          const allCancellations = [
+            ...itemsToCancel,
+            ...itemsWithPartialVoid.map(item => ({
+              ...item,
+              product_name: item.product_name,
+              unit_price: item.unit_price,
+              quantity: item.partialVoid.quantity,
+              pendingCancellation: true,
+              void_reason: item.partialVoid.reason,
+              cancelQuantity: item.partialVoid.quantity,
+              order_item_id: item.order_item_id
+            }))
+          ];
+
+          const result = await processCancellations(allCancellations, orderNumber);
 
           if (result.fullyCancelled) {
             alert('✅ Ticket entièrement annulé !');
@@ -1550,6 +1581,7 @@ export default function POS() {
         const existingProductIds = existingOrder.order_items.map(item => item.product_id);
         const newItems = updatedItems.filter(item =>
           !item.pendingCancellation &&
+          !item.partialVoid &&
           !existingProductIds.includes(item.product_id)
         );
 
