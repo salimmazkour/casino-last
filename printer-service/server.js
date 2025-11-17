@@ -400,6 +400,7 @@ app.post('/api/print', async (req, res) => {
       `)
       .eq('template_type', template_type)
       .eq('is_active', true)
+      .eq('is_cancellation_template', false)
       .maybeSingle();
 
     if (templateError) {
