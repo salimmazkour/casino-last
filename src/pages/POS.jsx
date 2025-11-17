@@ -279,13 +279,11 @@ export default function POS() {
     );
 
     if (existingOrderItem) {
-      setCart([...cart, {
-        product_id: product.id,
-        product_name: product.name,
-        unit_price: product.selling_price,
-        quantity: 1,
-        tax_rate: product.vat_rate || 0
-      }]);
+      setCart(cart.map(item =>
+        item === existingOrderItem
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      ));
     } else {
       setCart([...cart, {
         product_id: product.id,
@@ -1152,21 +1150,21 @@ export default function POS() {
         alert('✅ Ticket imprimé et envoyé en cuisine !');
       } else {
         console.log('[POS] Re-printing existing order');
+
+        const { data: existingOrder } = await supabase
+          .from('orders')
+          .select('order_number, order_items(product_id, quantity)')
+          .eq('id', currentOrderId)
+          .single();
+
+        orderNumber = existingOrder.order_number;
+
         const itemsToCancel = cart.filter(item => item.pendingCancellation);
         const itemsWithPartialVoid = cart.filter(item => item.partialVoid);
-        const newItems = cart.filter(item => !item.order_item_id && !item.pendingCancellation && !item.partialVoid);
 
         let updatedItems = cart;
 
         if (itemsToCancel.length > 0 || itemsWithPartialVoid.length > 0) {
-          const { data: existingOrder } = await supabase
-            .from('orders')
-            .select('order_number')
-            .eq('id', currentOrderId)
-            .single();
-
-          orderNumber = existingOrder.order_number;
-
           const allCancellations = [
             ...itemsToCancel,
             ...itemsWithPartialVoid.map(item => ({
@@ -1207,26 +1205,43 @@ export default function POS() {
           updatedItems = freshCart;
         }
 
-        if (newItems.length > 0) {
-          console.log(`[POS] Adding ${newItems.length} new item(s) to existing order`);
+        const existingProductMap = new Map();
+        existingOrder.order_items.forEach(item => {
+          existingProductMap.set(item.product_id, item.quantity);
+        });
 
-          const { data: existingOrder } = await supabase
-            .from('orders')
-            .select('order_number')
-            .eq('id', currentOrderId)
-            .single();
+        const itemsToAdd = [];
+        const itemsToProduce = [];
 
-          orderNumber = existingOrder.order_number;
+        updatedItems.forEach(item => {
+          if (item.pendingCancellation || item.partialVoid) return;
 
-          const newOrderItems = newItems.map(item => {
-            const itemTotal = item.unit_price * item.quantity;
+          const existingQty = existingProductMap.get(item.product_id) || 0;
+          const currentQty = item.quantity;
+
+          if (existingQty === 0) {
+            itemsToAdd.push({ ...item, quantityToAdd: currentQty });
+            itemsToProduce.push({ ...item, quantity: currentQty });
+          } else if (currentQty > existingQty) {
+            const additionalQty = currentQty - existingQty;
+            itemsToAdd.push({ ...item, quantityToAdd: additionalQty });
+            itemsToProduce.push({ ...item, quantity: additionalQty });
+          }
+        });
+
+        if (itemsToAdd.length > 0) {
+          console.log(`[POS] Adding ${itemsToAdd.length} new/increased item(s) to existing order`);
+
+          const newOrderItems = itemsToAdd.map(item => {
+            const qty = item.quantityToAdd;
+            const itemTotal = item.unit_price * qty;
             const itemSubtotal = itemTotal / (1 + (item.tax_rate / 100));
             const itemTax = itemTotal - itemSubtotal;
             return {
               order_id: currentOrderId,
               product_id: item.product_id,
               product_name: item.product_name,
-              quantity: item.quantity,
+              quantity: qty,
               unit_price: item.unit_price,
               subtotal: itemSubtotal,
               tax_rate: item.tax_rate,
