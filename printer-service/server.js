@@ -611,6 +611,154 @@ app.post('/api/print-cancellation', async (req, res) => {
   }
 });
 
+app.post('/api/print-specific-items', async (req, res) => {
+  try {
+    const { order_id, sales_point_id, item_ids, template_type } = req.body;
+
+    if (!order_id || !item_ids || item_ids.length === 0 || !template_type) {
+      return res.status(400).json({
+        success: false,
+        error: 'order_id, item_ids et template_type sont requis'
+      });
+    }
+
+    console.log(`📝 Impression items spécifiques pour commande #${order_id}...`);
+    console.log(`🏪 Point de vente ID: ${sales_point_id}`);
+    console.log(`📦 Items à imprimer: ${item_ids.join(', ')}`);
+
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        restaurant_tables (table_number),
+        sales_points (name),
+        clients (first_name, last_name)
+      `)
+      .eq('id', order_id)
+      .single();
+
+    if (orderError) throw orderError;
+    if (!order) throw new Error('Commande introuvable');
+
+    const { data: orderItems, error: itemsError } = await supabase
+      .from('order_items')
+      .select(`
+        id,
+        quantity,
+        unit_price,
+        notes,
+        products (name)
+      `)
+      .in('id', item_ids);
+
+    if (itemsError) throw itemsError;
+
+    const { data: template, error: templateError } = await supabase
+      .from('print_templates')
+      .select(`
+        template_content,
+        printer_definition_id,
+        printer_definitions!printer_definition_id (
+          name,
+          physical_printer_name,
+          sales_point_id
+        )
+      `)
+      .eq('template_type', template_type)
+      .eq('is_active', true)
+      .eq('is_cancellation_template', false)
+      .maybeSingle();
+
+    if (templateError) {
+      console.warn(`⚠️ Erreur récupération template: ${templateError.message}`);
+    }
+
+    console.log('📋 Template récupéré:', JSON.stringify(template, null, 2));
+
+    const templateContent = template?.template_content || {};
+
+    const clientName = order.clients
+      ? `${order.clients.first_name || ''} ${order.clients.last_name || ''}`.trim()
+      : '';
+
+    const orderData = {
+      id: order.id,
+      order_number: order.order_number,
+      table_name: order.restaurant_tables?.table_number,
+      sales_point_name: order.sales_points?.name,
+      client_name: clientName,
+      total_amount: 0,
+      items: orderItems.map(item => ({
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        product_name: item.products?.name,
+        notes: item.notes
+      }))
+    };
+
+    orderData.total_amount = orderData.items.reduce((sum, item) =>
+      sum + (item.quantity * item.unit_price), 0
+    );
+
+    console.log(`📄 Génération PDF pour ${template_type}...`);
+    const pdfPath = await generateTicketPDF(orderData, template_type, templateContent);
+
+    if (!template || !template.printer_definitions) {
+      console.warn(`⚠️ Aucun template ${template_type} configuré`);
+      setTimeout(() => {
+        try {
+          fs.unlinkSync(pdfPath);
+        } catch (err) {
+          console.error('⚠️  Erreur suppression fichier:', err.message);
+        }
+      }, 5000);
+      return res.json({
+        success: true,
+        message: `Aucun template ${template_type} configuré`
+      });
+    }
+
+    const printerDef = template.printer_definitions;
+
+    if (sales_point_id && printerDef.sales_point_id !== sales_point_id) {
+      console.warn(`⚠️ L'imprimante n'est pas associée au point de vente actuel`);
+    }
+
+    const physicalPrinter = printerDef.physical_printer_name || printerDef.name;
+
+    if (!physicalPrinter) {
+      throw new Error(`Aucune imprimante physique définie pour ${template_type}`);
+    }
+
+    console.log(`🖨️  Impression sur: ${physicalPrinter}`);
+    console.log(`📄 Fichier: ${pdfPath}`);
+
+    await print(pdfPath, { printer: physicalPrinter });
+
+    setTimeout(() => {
+      try {
+        fs.unlinkSync(pdfPath);
+        console.log(`🗑️  Fichier temporaire supprimé`);
+      } catch (err) {
+        console.error('⚠️  Erreur suppression fichier:', err.message);
+      }
+    }, 5000);
+
+    console.log(`✅ Items spécifiques imprimés avec succès`);
+    res.json({
+      success: true,
+      message: 'Impression réussie'
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur impression items spécifiques:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 loadPrinterMapping();
 
 app.listen(PORT, () => {

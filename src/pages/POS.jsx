@@ -255,18 +255,37 @@ export default function POS() {
   };
 
   const addToCart = (product) => {
-    const existingItem = cart.find(item =>
+    const existingNewItem = cart.find(item =>
       item.product_id === product.id &&
       !item.order_item_id &&
-      !item.pendingCancellation
+      !item.pendingCancellation &&
+      !item.partialVoid
     );
 
-    if (existingItem) {
+    if (existingNewItem) {
       setCart(cart.map(item =>
-        item.product_id === product.id && !item.order_item_id && !item.pendingCancellation
+        item === existingNewItem
           ? { ...item, quantity: item.quantity + 1 }
           : item
       ));
+      return;
+    }
+
+    const existingOrderItem = cart.find(item =>
+      item.product_id === product.id &&
+      item.order_item_id &&
+      !item.pendingCancellation &&
+      !item.partialVoid
+    );
+
+    if (existingOrderItem) {
+      setCart([...cart, {
+        product_id: product.id,
+        product_name: product.name,
+        unit_price: product.selling_price,
+        quantity: 1,
+        tax_rate: product.vat_rate || 0
+      }]);
     } else {
       setCart([...cart, {
         product_id: product.id,
@@ -1206,7 +1225,9 @@ export default function POS() {
           if (insertError) throw insertError;
 
           await deductStockFromOrder(insertedItems, orderNumber);
-          await PrintService.printMultipleTickets(currentOrderId, selectedSalesPoint.id, ['fabrication']);
+
+          const newItemIds = insertedItems.map(item => item.id);
+          await PrintService.printSpecificItems(currentOrderId, selectedSalesPoint.id, newItemIds, 'fabrication');
         }
 
         const { data: allOrderItems } = await supabase

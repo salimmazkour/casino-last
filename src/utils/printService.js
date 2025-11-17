@@ -105,6 +105,45 @@ export class PrintService {
     return results;
   }
 
+  static async printSpecificItems(orderId, salesPointId, itemIds, templateType = 'fabrication') {
+    try {
+      const printServiceUrl = import.meta.env.VITE_PRINT_SERVICE_URL || 'http://localhost:3001';
+      const printEndpoint = `${printServiceUrl}/api/print-specific-items`;
+
+      const response = await fetch(printEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          order_id: orderId,
+          sales_point_id: salesPointId,
+          item_ids: itemIds,
+          template_type: templateType,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Print failed');
+      }
+
+      const result = await response.json();
+
+      return {
+        success: true,
+        message: result.message || 'Impression réussie',
+      };
+    } catch (error) {
+      console.error(`Error printing specific items:`, error);
+      return {
+        success: false,
+        message: error.message,
+        error,
+      };
+    }
+  }
+
   static async printCancellation(orderId, salesPointId, cancelledItems, orderNumber) {
     try {
       const printServiceUrl = import.meta.env.VITE_PRINT_SERVICE_URL || 'http://localhost:3001';
