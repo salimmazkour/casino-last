@@ -2015,7 +2015,7 @@ export default function POS() {
                       {item.partialVoid && <span style={{fontSize: '10px', color: '#ef4444'}}> (-{item.partialVoid.quantity})</span>}
                     </div>
                     <div className="ticket-item-name">{item.product_name}</div>
-                    <div className="ticket-item-price">{item.unit_price.toFixed(0)}</div>
+                    <div className="ticket-item-price">{(item.unit_price * item.quantity).toFixed(0)}</div>
                     <div className="ticket-item-actions">
                       {currentOrderId ? (
                         <button onClick={() => initiateVoid(item)} className="ticket-item-void" disabled={item.pendingCancellation || item.partialVoid}>
