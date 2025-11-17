@@ -1143,6 +1143,8 @@ export default function POS() {
 
         setCart([]);
         setCurrentOrderId(null);
+        setSelectedTable(null);
+        setSelectedClient(null);
         setProductionSlipPrinted(false);
         setCancellationSlipPrinted(false);
 
@@ -1299,6 +1301,13 @@ export default function POS() {
           .eq('id', currentOrderId);
 
         await PrintService.printMultipleTickets(currentOrderId, selectedSalesPoint.id, ['caisse']);
+
+        setCart([]);
+        setCurrentOrderId(null);
+        setSelectedTable(null);
+        setSelectedClient(null);
+        setProductionSlipPrinted(false);
+        setCancellationSlipPrinted(false);
 
         console.log('[POS] Order updated, print complete');
         await loadHoldTickets();
@@ -1497,6 +1506,8 @@ export default function POS() {
 
       setCart([]);
       setCurrentOrderId(null);
+      setSelectedTable(null);
+      setSelectedClient(null);
       setProductionSlipPrinted(false);
       setCancellationSlipPrinted(false);
       await loadHoldTickets();
