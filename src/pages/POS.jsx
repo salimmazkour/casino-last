@@ -1044,7 +1044,7 @@ export default function POS() {
       if (shouldShowClient) {
         setShowClientModal(true);
       } else {
-        executePendingAction();
+        setTimeout(() => executePendingAction(), 0);
       }
     }
   };
@@ -1054,7 +1054,7 @@ export default function POS() {
     setShowClientModal(false);
 
     if (pendingAction) {
-      executePendingAction();
+      setTimeout(() => executePendingAction(), 0);
     }
   };
 
@@ -1319,6 +1319,7 @@ export default function POS() {
 
         console.log('[POS] Order updated, print complete');
         await loadHoldTickets();
+        await loadAllTickets();
         alert('✅ Ticket réimprimé !');
         console.log('[POS] handlePrintTicket - End (success)');
       }
@@ -1517,6 +1518,7 @@ export default function POS() {
       setProductionSlipPrinted(false);
       setCancellationSlipPrinted(false);
       await loadHoldTickets();
+      await loadAllTickets();
       alert('✅ Commande envoyée et mise en attente !');
     } catch (error) {
       console.error('Erreur envoi:', error);
