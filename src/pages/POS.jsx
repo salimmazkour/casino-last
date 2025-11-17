@@ -1401,9 +1401,7 @@ export default function POS() {
 
         await deductStockFromOrder(insertedItems, order.order_number);
 
-        if (!productionSlipPrinted) {
-          await printProductionSlip(cart.filter(item => !item.pendingCancellation), orderNumber, order.id);
-        }
+        await PrintService.printMultipleTickets(order.id, selectedSalesPoint.id, ['fabrication']);
       } else {
         const { data: existingOrder } = await supabase
           .from('orders')
@@ -1926,6 +1924,8 @@ export default function POS() {
 
     if (!currentOrderId) {
       setCart([]);
+      setSelectedTable(null);
+      setSelectedClient(null);
       alert('Panier vidé !');
       return;
     }
@@ -1990,6 +1990,8 @@ export default function POS() {
 
       setCart([]);
       setCurrentOrderId(null);
+      setSelectedTable(null);
+      setSelectedClient(null);
       setProductionSlipPrinted(false);
       setCancellationSlipPrinted(false);
       await loadHoldTickets();

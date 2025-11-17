@@ -132,7 +132,7 @@ async function generateTicketPDF(orderData, templateType) {
     }
 
     doc.moveDown();
-    doc.fontSize(8).text(`Total: ${orderData.total_amount || 0} €`, { align: 'right' });
+    doc.fontSize(8).text(`Total: ${orderData.total_amount || 0} FCFA`, { align: 'right' });
     doc.fontSize(7).text(new Date().toLocaleString('fr-FR'), { align: 'center' });
 
     doc.end();

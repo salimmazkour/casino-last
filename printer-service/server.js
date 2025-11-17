@@ -259,7 +259,7 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
           .replace(/\{\{table\}\}/g, orderData.table_name || '')
           .replace(/\{\{client_name\}\}/g, orderData.client_name || '')
           .replace(/\{\{date\}\}/g, new Date().toLocaleString('fr-FR'))
-          .replace(/\{\{total\}\}/g, `${orderData.total_amount || 0}€`)
+          .replace(/\{\{total\}\}/g, `${orderData.total_amount || 0} FCFA`)
           .replace(/\{\{pos\}\}/g, orderData.sales_point_name || '');
         doc.font(headerStyle.bold ? 'Helvetica-Bold' : 'Helvetica')
            .fontSize(headerStyle.size || 12)
@@ -299,7 +299,7 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
         const itemText = `${item.quantity}x ${item.product_name}`;
 
         if (showPrices) {
-          const priceText = `${(item.quantity * (item.unit_price || 0)).toFixed(2)}€`;
+          const priceText = `${(item.quantity * (item.unit_price || 0)).toFixed(2)} FCFA`;
           doc.font(bodyStyle.bold ? 'Helvetica-Bold' : 'Helvetica')
              .fontSize(bodyStyle.size || 10)
              .text(itemText, { continued: true });
@@ -322,7 +322,7 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
 
     const showPrices = templateContent.showPrices !== false;
     if (showPrices) {
-      doc.font('Helvetica-Bold').fontSize(12).text(`TOTAL: ${orderData.total_amount || 0}€`, { align: 'right' });
+      doc.font('Helvetica-Bold').fontSize(12).text(`TOTAL: ${orderData.total_amount || 0} FCFA`, { align: 'right' });
     }
 
     if (templateContent.footer) {
@@ -337,7 +337,7 @@ async function generateTicketPDF(orderData, templateType, templateContent = {}) 
           .replace(/\{\{table\}\}/g, orderData.table_name || '')
           .replace(/\{\{client_name\}\}/g, orderData.client_name || '')
           .replace(/\{\{date\}\}/g, new Date().toLocaleString('fr-FR'))
-          .replace(/\{\{total\}\}/g, `${orderData.total_amount || 0}€`)
+          .replace(/\{\{total\}\}/g, `${orderData.total_amount || 0} FCFA`)
           .replace(/\{\{pos\}\}/g, orderData.sales_point_name || '');
         doc.font(footerStyle.bold ? 'Helvetica-Bold' : 'Helvetica')
            .fontSize(footerStyle.size || 9)
