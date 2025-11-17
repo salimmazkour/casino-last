@@ -83,6 +83,12 @@ export default function POS() {
     }
   }, [selectedSalesPoint]);
 
+  useEffect(() => {
+    if (showTicketsView && selectedSalesPoint) {
+      loadAllTickets();
+    }
+  }, [showTicketsView]);
+
   const loadSalesPoints = async () => {
     try {
       const { data, error } = await supabase
