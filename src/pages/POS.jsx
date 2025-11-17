@@ -1456,7 +1456,9 @@ export default function POS() {
 
           const { data: insertedItems } = await supabase.from('order_items').insert(newOrderItems).select();
           await deductStockFromOrder(insertedItems, orderNumber);
-          await printProductionSlip(itemsToProduce, orderNumber, currentOrderId);
+
+          const newItemIds = insertedItems.map(item => item.id);
+          await PrintService.printSpecificItems(currentOrderId, selectedSalesPoint.id, newItemIds, 'fabrication');
         }
 
         const updatedTotals = calculateTotalsFromItems(updatedItems);
@@ -1705,7 +1707,9 @@ export default function POS() {
 
           const { data: insertedItems } = await supabase.from('order_items').insert(newOrderItems).select();
           await deductStockFromOrder(insertedItems, orderNumber);
-          await printProductionSlip(itemsToProduce, orderNumber, currentOrderId);
+
+          const newItemIds = insertedItems.map(item => item.id);
+          await PrintService.printSpecificItems(currentOrderId, selectedSalesPoint.id, newItemIds, 'fabrication');
         }
 
         const updatedTotals = calculateTotalsFromItems(updatedItems);
