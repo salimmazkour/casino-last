@@ -1256,6 +1256,9 @@ export default function POS() {
           last_printed_at: new Date().toISOString()
         };
 
+        if (selectedTable) updateData.table_id = selectedTable.id;
+        if (selectedClient) updateData.client_id = selectedClient.id;
+
         await supabase
           .from('orders')
           .update(updateData)
@@ -1688,13 +1691,18 @@ export default function POS() {
 
         const updatedTotals = calculateTotalsFromItems(updatedItems);
 
+        const updateData = {
+          subtotal: updatedTotals.subtotal,
+          tax_amount: updatedTotals.taxAmount,
+          total_amount: updatedTotals.total
+        };
+
+        if (selectedTable) updateData.table_id = selectedTable.id;
+        if (selectedClient) updateData.client_id = selectedClient.id;
+
         await supabase
           .from('orders')
-          .update({
-            subtotal: updatedTotals.subtotal,
-            tax_amount: updatedTotals.taxAmount,
-            total_amount: updatedTotals.total
-          })
+          .update(updateData)
           .eq('id', currentOrderId);
       }
 
