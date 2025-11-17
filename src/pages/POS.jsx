@@ -1352,23 +1352,41 @@ export default function POS() {
           updatedItems = result.remainingItems;
         }
 
-        const existingProductIds = existingOrder.order_items.map(item => item.product_id);
-        const newItems = updatedItems.filter(item =>
-          !item.pendingCancellation &&
-          !item.partialVoid &&
-          !existingProductIds.includes(item.product_id)
-        );
+        const existingProductMap = new Map();
+        existingOrder.order_items.forEach(item => {
+          existingProductMap.set(item.product_id, item.quantity);
+        });
 
-        if (newItems.length > 0) {
-          const newOrderItems = newItems.map(item => {
-            const itemTotal = item.unit_price * item.quantity;
+        const itemsToAdd = [];
+        const itemsToProduce = [];
+
+        updatedItems.forEach(item => {
+          if (item.pendingCancellation || item.partialVoid) return;
+
+          const existingQty = existingProductMap.get(item.product_id) || 0;
+          const currentQty = item.quantity;
+
+          if (existingQty === 0) {
+            itemsToAdd.push({ ...item, quantityToAdd: currentQty });
+            itemsToProduce.push({ ...item, quantity: currentQty });
+          } else if (currentQty > existingQty) {
+            const additionalQty = currentQty - existingQty;
+            itemsToAdd.push({ ...item, quantityToAdd: additionalQty });
+            itemsToProduce.push({ ...item, quantity: additionalQty });
+          }
+        });
+
+        if (itemsToAdd.length > 0) {
+          const newOrderItems = itemsToAdd.map(item => {
+            const qty = item.quantityToAdd;
+            const itemTotal = item.unit_price * qty;
             const itemSubtotal = itemTotal / (1 + (item.tax_rate / 100));
             const itemTax = itemTotal - itemSubtotal;
             return {
               order_id: currentOrderId,
               product_id: item.product_id,
               product_name: item.product_name,
-              quantity: item.quantity,
+              quantity: qty,
               unit_price: item.unit_price,
               subtotal: itemSubtotal,
               tax_rate: item.tax_rate,
@@ -1379,7 +1397,7 @@ export default function POS() {
 
           const { data: insertedItems } = await supabase.from('order_items').insert(newOrderItems).select();
           await deductStockFromOrder(insertedItems, orderNumber);
-          await printProductionSlip(newItems, orderNumber, currentOrderId);
+          await printProductionSlip(itemsToProduce, orderNumber, currentOrderId);
         }
 
         const updatedTotals = calculateTotalsFromItems(updatedItems);
@@ -1583,23 +1601,41 @@ export default function POS() {
           updatedItems = result.remainingItems;
         }
 
-        const existingProductIds = existingOrder.order_items.map(item => item.product_id);
-        const newItems = updatedItems.filter(item =>
-          !item.pendingCancellation &&
-          !item.partialVoid &&
-          !existingProductIds.includes(item.product_id)
-        );
+        const existingProductMap = new Map();
+        existingOrder.order_items.forEach(item => {
+          existingProductMap.set(item.product_id, item.quantity);
+        });
 
-        if (newItems.length > 0) {
-          const newOrderItems = newItems.map(item => {
-            const itemTotal = item.unit_price * item.quantity;
+        const itemsToAdd = [];
+        const itemsToProduce = [];
+
+        updatedItems.forEach(item => {
+          if (item.pendingCancellation || item.partialVoid) return;
+
+          const existingQty = existingProductMap.get(item.product_id) || 0;
+          const currentQty = item.quantity;
+
+          if (existingQty === 0) {
+            itemsToAdd.push({ ...item, quantityToAdd: currentQty });
+            itemsToProduce.push({ ...item, quantity: currentQty });
+          } else if (currentQty > existingQty) {
+            const additionalQty = currentQty - existingQty;
+            itemsToAdd.push({ ...item, quantityToAdd: additionalQty });
+            itemsToProduce.push({ ...item, quantity: additionalQty });
+          }
+        });
+
+        if (itemsToAdd.length > 0) {
+          const newOrderItems = itemsToAdd.map(item => {
+            const qty = item.quantityToAdd;
+            const itemTotal = item.unit_price * qty;
             const itemSubtotal = itemTotal / (1 + (item.tax_rate / 100));
             const itemTax = itemTotal - itemSubtotal;
             return {
               order_id: currentOrderId,
               product_id: item.product_id,
               product_name: item.product_name,
-              quantity: item.quantity,
+              quantity: qty,
               unit_price: item.unit_price,
               subtotal: itemSubtotal,
               tax_rate: item.tax_rate,
@@ -1610,7 +1646,7 @@ export default function POS() {
 
           const { data: insertedItems } = await supabase.from('order_items').insert(newOrderItems).select();
           await deductStockFromOrder(insertedItems, orderNumber);
-          await printProductionSlip(newItems, orderNumber, currentOrderId);
+          await printProductionSlip(itemsToProduce, orderNumber, currentOrderId);
         }
 
         const updatedTotals = calculateTotalsFromItems(updatedItems);
