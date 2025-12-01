@@ -6,6 +6,7 @@ import { logAction } from '../utils/actionLogger';
 import { PrintService } from '../utils/printService';
 import SplitTicketModal from '../components/SplitTicketModal';
 import HotelTransferModal from '../components/HotelTransferModal';
+import ProductOptionsModal from '../components/ProductOptionsModal';
 import './POS.css';
 
 export default function POS() {
@@ -67,6 +68,8 @@ export default function POS() {
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [showTableModal, setShowTableModal] = useState(false);
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [selectedProductForOptions, setSelectedProductForOptions] = useState(null);
 
   useEffect(() => {
     loadSalesPoints();
@@ -260,11 +263,24 @@ export default function POS() {
     }
   };
 
-  const addToCart = (product) => {
+  const addToCart = async (product) => {
+    const { data: optionAssignments } = await supabase
+      .from('product_option_group_assignments')
+      .select('id')
+      .eq('product_id', product.id)
+      .limit(1);
+
+    if (optionAssignments && optionAssignments.length > 0) {
+      setSelectedProductForOptions(product);
+      setShowOptionsModal(true);
+      return;
+    }
+
     const existingItemIndex = cart.findIndex(item =>
       item.product_id === product.id &&
       !item.pendingCancellation &&
-      !item.partialVoid
+      !item.partialVoid &&
+      !item.options
     );
 
     if (existingItemIndex !== -1) {
@@ -283,6 +299,19 @@ export default function POS() {
         tax_rate: product.vat_rate || 0
       }]);
     }
+  };
+
+  const handleOptionsConfirm = (optionsData) => {
+    setCart([...cart, {
+      product_id: optionsData.product.id,
+      product_name: optionsData.product.name,
+      unit_price: optionsData.totalPrice,
+      quantity: 1,
+      tax_rate: optionsData.product.vat_rate || 0,
+      options: optionsData.options
+    }]);
+    setShowOptionsModal(false);
+    setSelectedProductForOptions(null);
   };
 
   const removeFromCart = (productId) => {
@@ -652,6 +681,20 @@ export default function POS() {
         });
 
         const { data: insertedItems } = await supabase.from('order_items').insert(orderItems).select();
+
+        for (let i = 0; i < cart.length; i++) {
+          const cartItem = cart[i];
+          if (cartItem.options && cartItem.options.length > 0) {
+            const orderItem = insertedItems[i];
+            const optionsToInsert = cartItem.options.map(opt => ({
+              order_item_id: orderItem.id,
+              option_item_id: opt.option_item_id,
+              selection_index: opt.selection_index,
+              price_applied: opt.price_applied
+            }));
+            await supabase.from('order_item_options').insert(optionsToInsert);
+          }
+        }
 
         await deductStockFromOrder(insertedItems, order.order_number);
 
@@ -1383,6 +1426,20 @@ export default function POS() {
         });
 
         const { data: insertedItems } = await supabase.from('order_items').insert(orderItems).select();
+
+        for (let i = 0; i < cart.length; i++) {
+          const cartItem = cart[i];
+          if (cartItem.options && cartItem.options.length > 0) {
+            const orderItem = insertedItems[i];
+            const optionsToInsert = cartItem.options.map(opt => ({
+              order_item_id: orderItem.id,
+              option_item_id: opt.option_item_id,
+              selection_index: opt.selection_index,
+              price_applied: opt.price_applied
+            }));
+            await supabase.from('order_item_options').insert(optionsToInsert);
+          }
+        }
 
         await deductStockFromOrder(insertedItems, order.order_number);
 
@@ -2951,6 +3008,17 @@ export default function POS() {
             </div>
           </div>
         </div>
+      )}
+
+      {showOptionsModal && selectedProductForOptions && (
+        <ProductOptionsModal
+          product={selectedProductForOptions}
+          onClose={() => {
+            setShowOptionsModal(false);
+            setSelectedProductForOptions(null);
+          }}
+          onConfirm={handleOptionsConfirm}
+        />
       )}
     </div>
   );

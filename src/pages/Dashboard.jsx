@@ -22,6 +22,7 @@ import PurchaseReceptions from './PurchaseReceptions';
 import PurchaseHistory from './PurchaseHistory';
 import PrinterDefinitions from './PrinterDefinitions';
 import PrintTemplates from './PrintTemplates';
+import OptionGroups from './OptionGroups';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -174,6 +175,7 @@ const Dashboard = () => {
     { id: 'products', name: 'Produits', icon: '📦', requiredPermission: { module: 'products', action: 'view' }, requiresActions: true },
     { id: 'categories', name: 'Catégories', icon: '🏷️', requiredPermission: { module: 'products', action: 'view' }, requiresActions: true },
     { id: 'product-types', name: 'Types de produits', icon: '🔖', requiredPermission: { module: 'products', action: 'view' }, requiresActions: true },
+    { id: 'option-groups', name: 'Options Produits', icon: '⚙️', requiredPermission: { module: 'products', action: 'view' }, requiresActions: true },
     { id: 'storage', name: 'Dépôts', icon: '🏪', requiredPermission: { module: 'settings', action: 'view' }, requiresActions: true },
     { id: 'inventory', name: 'Stock', icon: '📋', requiredPermission: { module: 'inventory', action: 'view' } },
     { id: 'suppliers', name: 'Fournisseurs', icon: '🚚', requiredPermission: { module: 'inventory', action: 'view' } },
@@ -429,6 +431,7 @@ const Dashboard = () => {
           {activeModule === 'products' && <Products />}
           {activeModule === 'categories' && <Categories />}
           {activeModule === 'product-types' && <ProductTypes />}
+          {activeModule === 'option-groups' && <OptionGroups />}
           {activeModule === 'storage' && <StorageLocations />}
           {activeModule === 'pos' && <SalesPoints />}
           {activeModule === 'inventory' && <Inventory />}
@@ -446,7 +449,7 @@ const Dashboard = () => {
           {activeModule === 'roles' && <Roles />}
           {activeModule === 'action-logs' && <ActionLogs />}
 
-          {!['dashboard', 'products', 'categories', 'product-types', 'storage', 'pos', 'inventory', 'suppliers', 'purchase-orders', 'purchase-receptions', 'purchase-history', 'cashregister', 'clients', 'void-logs', 'tables', 'employees', 'roles', 'action-logs', 'printer-definitions', 'print-templates'].includes(activeModule) && (
+          {!['dashboard', 'products', 'categories', 'product-types', 'option-groups', 'storage', 'pos', 'inventory', 'suppliers', 'purchase-orders', 'purchase-receptions', 'purchase-history', 'cashregister', 'clients', 'void-logs', 'tables', 'employees', 'roles', 'action-logs', 'printer-definitions', 'print-templates'].includes(activeModule) && (
             <div className="welcome-card">
               <h3>Module en cours de développement</h3>
               <p>Ce module sera disponible prochainement.</p>

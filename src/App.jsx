@@ -11,6 +11,7 @@ import PurchaseReceptions from './pages/PurchaseReceptions';
 import PurchaseHistory from './pages/PurchaseHistory';
 import TableManagement from './pages/TableManagement';
 import Hotel from './pages/Hotel';
+import OptionGroups from './pages/OptionGroups';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Détecte si on est dans Electron
@@ -104,6 +105,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Hotel />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/option-groups"
+              element={
+                <ProtectedRoute>
+                  <OptionGroups />
                 </ProtectedRoute>
               }
             />

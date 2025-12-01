@@ -64,6 +64,8 @@ export default function Products() {
   const [previewPriceHT, setPreviewPriceHT] = useState(0);
   const [previewPriceTTC, setPreviewPriceTTC] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
+  const [availableOptionGroups, setAvailableOptionGroups] = useState([]);
+  const [productOptionAssignments, setProductOptionAssignments] = useState([]);
 
   const capitalizeWords = (str) => {
     return str.replace(/\b\w/g, char => char.toUpperCase());
@@ -75,7 +77,7 @@ export default function Products() {
 
   const loadData = async () => {
     try {
-      const [productsRes, categoriesRes, productTypesRes, printersRes, storageRes, salesPointsRes, pricesRes] = await Promise.all([
+      const [productsRes, categoriesRes, productTypesRes, printersRes, storageRes, salesPointsRes, pricesRes, optionGroupsRes] = await Promise.all([
         supabase.from('products').select('*, product_categories(name), product_types(name, can_be_sold), storage_locations(name)').order('name'),
         supabase.from('product_categories').select('*').order('name'),
         supabase.from('product_types').select('*').eq('is_active', true).order('name'),
@@ -83,6 +85,7 @@ export default function Products() {
         supabase.from('storage_locations').select('*').eq('is_active', true).order('name'),
         supabase.from('sales_points').select('*').eq('is_active', true).order('name'),
         supabase.from('product_prices').select('*, sales_points(name), storage_locations(name)'),
+        supabase.from('option_groups').select('*').order('name'),
       ]);
 
       if (productsRes.data) setProducts(productsRes.data);
@@ -98,6 +101,7 @@ export default function Products() {
         setSalesPoints(salesPointsRes.data);
       }
       if (pricesRes.data) setProductPrices(pricesRes.data);
+      if (optionGroupsRes.data) setAvailableOptionGroups(optionGroupsRes.data);
     } catch (error) {
       console.error('Erreur chargement:', error);
     } finally {
@@ -523,6 +527,28 @@ export default function Products() {
         }
       }
 
+      if (productOptionAssignments.length > 0) {
+        const optionsData = productOptionAssignments
+          .filter(a => a.option_group_id)
+          .map((item, index) => ({
+            product_id: productId,
+            option_group_id: item.option_group_id,
+            min_selections: parseInt(item.min_selections) || 0,
+            max_selections: parseInt(item.max_selections) || 1,
+            included_selections: parseInt(item.included_selections) || 0,
+            is_required: item.is_required || false,
+            display_order: index,
+          }));
+
+        if (optionsData.length > 0) {
+          const { error: optionsError } = await supabase
+            .from('product_option_group_assignments')
+            .insert(optionsData);
+
+          if (optionsError) throw optionsError;
+        }
+      }
+
       const { data: productTypeData } = await supabase
         .from('product_types')
         .select('name')
@@ -863,6 +889,28 @@ export default function Products() {
         }
       }
 
+      if (productOptionAssignments.length > 0) {
+        const optionsData = productOptionAssignments
+          .filter(a => a.option_group_id)
+          .map((item, index) => ({
+            product_id: productId,
+            option_group_id: item.option_group_id,
+            min_selections: parseInt(item.min_selections) || 0,
+            max_selections: parseInt(item.max_selections) || 1,
+            included_selections: parseInt(item.included_selections) || 0,
+            is_required: item.is_required || false,
+            display_order: index,
+          }));
+
+        if (optionsData.length > 0) {
+          const { error: optionsError } = await supabase
+            .from('product_option_group_assignments')
+            .insert(optionsData);
+
+          if (optionsError) throw optionsError;
+        }
+      }
+
       const { data: productTypeData } = await supabase
         .from('product_types')
         .select('name')
@@ -985,6 +1033,17 @@ export default function Products() {
       setProductStocks([]);
     }
 
+    const { data: optionAssignments } = await supabase
+      .from('product_option_group_assignments')
+      .select('*')
+      .eq('product_id', product.id);
+
+    if (optionAssignments) {
+      setProductOptionAssignments(optionAssignments);
+    } else {
+      setProductOptionAssignments([]);
+    }
+
     setShowModal(true);
   };
 
@@ -1028,6 +1087,7 @@ export default function Products() {
     setRecipe([]);
     setProductPrices([]);
     setProductStocks([]);
+    setProductOptionAssignments([]);
     setEditingProduct(null);
     setSelectedIngredient('');
     setIngredientQuantity(1);
@@ -2021,6 +2081,144 @@ export default function Products() {
                     </button>
                   </div>
                 );
+              })()}
+
+              {(() => {
+                const selectedType = productTypes.find(t => t.id === formData.product_type_id);
+                const isVendable = selectedType?.can_be_sold;
+
+                return isVendable ? (
+                  <div className="options-section">
+                    <h3>Options et Modifications</h3>
+                    <p className="help-text">Ajoutez des groupes d'options pour personnaliser ce produit (cuisson, accompagnements, garnitures, etc.)</p>
+
+                    {productOptionAssignments.length === 0 && (
+                      <div style={{
+                        padding: '20px',
+                        background: '#e3f2fd',
+                        borderRadius: '8px',
+                        marginBottom: '16px',
+                        textAlign: 'center',
+                        color: '#1565c0',
+                        fontWeight: '500'
+                      }}>
+                        ℹ️ Aucun groupe d'options configuré pour ce produit
+                      </div>
+                    )}
+
+                    <div className="options-grid">
+                      {productOptionAssignments.map((assignment, index) => {
+                        const group = availableOptionGroups.find(g => g.id === assignment.option_group_id);
+                        return (
+                          <div key={index} className="option-assignment-card">
+                            <div className="option-assignment-header">
+                              <select
+                                className="option-group-select"
+                                value={assignment.option_group_id}
+                                onChange={(e) => {
+                                  const newAssignments = [...productOptionAssignments];
+                                  newAssignments[index].option_group_id = e.target.value;
+                                  setProductOptionAssignments(newAssignments);
+                                }}
+                              >
+                                <option value="">Sélectionner un groupe...</option>
+                                {availableOptionGroups.map(g => (
+                                  <option key={g.id} value={g.id}>{g.name}</option>
+                                ))}
+                              </select>
+                              <button
+                                type="button"
+                                className="btn-remove-option"
+                                onClick={() => {
+                                  setProductOptionAssignments(productOptionAssignments.filter((_, i) => i !== index));
+                                }}
+                                title="Retirer ce groupe"
+                              >
+                                ✕
+                              </button>
+                            </div>
+
+                            {group && (
+                              <div className="option-assignment-details">
+                                <div className="option-field">
+                                  <label>Min</label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={assignment.min_selections}
+                                    onChange={(e) => {
+                                      const newAssignments = [...productOptionAssignments];
+                                      newAssignments[index].min_selections = parseInt(e.target.value) || 0;
+                                      setProductOptionAssignments(newAssignments);
+                                    }}
+                                  />
+                                </div>
+                                <div className="option-field">
+                                  <label>Max</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={assignment.max_selections}
+                                    onChange={(e) => {
+                                      const newAssignments = [...productOptionAssignments];
+                                      newAssignments[index].max_selections = parseInt(e.target.value) || 1;
+                                      setProductOptionAssignments(newAssignments);
+                                    }}
+                                  />
+                                </div>
+                                <div className="option-field">
+                                  <label>Inclus</label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={assignment.included_selections}
+                                    onChange={(e) => {
+                                      const newAssignments = [...productOptionAssignments];
+                                      newAssignments[index].included_selections = parseInt(e.target.value) || 0;
+                                      setProductOptionAssignments(newAssignments);
+                                    }}
+                                  />
+                                </div>
+                                <div className="option-field-checkbox">
+                                  <label>
+                                    <input
+                                      type="checkbox"
+                                      checked={assignment.is_required}
+                                      onChange={(e) => {
+                                        const newAssignments = [...productOptionAssignments];
+                                        newAssignments[index].is_required = e.target.checked;
+                                        setProductOptionAssignments(newAssignments);
+                                      }}
+                                    />
+                                    Obligatoire
+                                  </label>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      type="button"
+                      className="btn-add-option"
+                      onClick={() => {
+                        setProductOptionAssignments([...productOptionAssignments, {
+                          product_id: editingProduct?.id || null,
+                          option_group_id: '',
+                          min_selections: 0,
+                          max_selections: 1,
+                          included_selections: 0,
+                          is_required: false,
+                          display_order: productOptionAssignments.length
+                        }]);
+                      }}
+                    >
+                      + Ajouter un groupe d'options
+                    </button>
+                  </div>
+                ) : null;
               })()}
 
               <div className="form-actions">

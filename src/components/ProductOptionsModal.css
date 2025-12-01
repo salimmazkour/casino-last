@@ -1,0 +1,260 @@
+.product-options-modal {
+  max-width: 600px;
+  max-height: 85vh;
+}
+
+.product-options-modal .modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px;
+}
+
+.product-options-modal .modal-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+}
+
+.product-base-price {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 14px;
+}
+
+.validation-errors {
+  background: #ffebee;
+  border: 1px solid #ef5350;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.error-message {
+  color: #c62828;
+  font-size: 14px;
+  margin: 4px 0;
+}
+
+.option-group {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.option-group:last-child {
+  border-bottom: none;
+}
+
+.option-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.option-group-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.required-badge {
+  background: #ff5252;
+  color: white;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.option-group-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.selection-info {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+.included-info {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.option-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f9f9f9;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 12px;
+}
+
+.option-item:hover {
+  background: #f0f0f0;
+  border-color: #e0e0e0;
+}
+
+.option-item.selected {
+  background: #e3f2fd;
+  border-color: #1976d2;
+}
+
+.option-item input[type="radio"],
+.option-item input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.option-item input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.option-name {
+  flex: 1;
+  font-weight: 500;
+  color: #333;
+}
+
+.option-price {
+  font-weight: 600;
+  font-size: 14px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.option-price.included {
+  background: #c8e6c9;
+  color: #2e7d32;
+}
+
+.option-price.additional {
+  background: #fff9c4;
+  color: #f57f17;
+}
+
+.inclusion-count {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.option-price-preview {
+  font-size: 13px;
+  color: #999;
+  font-weight: 500;
+}
+
+.modal-footer {
+  border-top: 1px solid #e0e0e0;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.price-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  color: #333;
+}
+
+.price-row.total {
+  border-top: 2px solid #ddd;
+  padding-top: 12px;
+  margin-top: 8px;
+  font-weight: 700;
+  font-size: 18px;
+  color: #1976d2;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-primary {
+  background: #1976d2;
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: #1565c0;
+}
+
+.btn-secondary {
+  background: white;
+  color: #666;
+  border: 1px solid #ddd;
+  padding: 12px 32px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #f5f5f5;
+  border-color: #bbb;
+}
+
+@media (max-width: 768px) {
+  .product-options-modal {
+    max-width: 95%;
+    margin: 10px;
+  }
+
+  .option-group-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .option-group-info {
+    align-items: flex-start;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+}
