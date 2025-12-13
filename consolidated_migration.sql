@@ -2046,6 +2046,17 @@ CREATE TABLE IF NOT EXISTS restaurant_tables (
   UNIQUE(sales_point_id, table_number)
 );
 
+-- Ajouter la colonne zone si elle n'existe pas
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'restaurant_tables' AND column_name = 'zone'
+  ) THEN
+    ALTER TABLE restaurant_tables ADD COLUMN zone text DEFAULT 'main';
+  END IF;
+END $$;
+
 -- Création de la table des transferts de table
 CREATE TABLE IF NOT EXISTS table_transfers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
