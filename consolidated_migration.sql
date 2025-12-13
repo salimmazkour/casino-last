@@ -449,7 +449,15 @@ BEGIN
 END $$;
 
 -- Modification de la contrainte email (la rendre optionnelle)
-ALTER TABLE employees ALTER COLUMN email DROP NOT NULL;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'employees' AND column_name = 'email' AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE employees ALTER COLUMN email DROP NOT NULL;
+  END IF;
+END $$;
 
 -- Création de la table des sessions
 CREATE TABLE IF NOT EXISTS user_sessions (
@@ -2453,19 +2461,28 @@ ALTER TABLE stock_movements
 -- First, check if we need to consolidate duplicate stocks
 DO $$
 BEGIN
-  -- Make pos_id nullable
-  ALTER TABLE product_stocks 
-    ALTER COLUMN pos_id DROP NOT NULL;
-  
+  -- Make pos_id nullable (only if column exists)
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'product_stocks' AND column_name = 'pos_id'
+  ) THEN
+    ALTER TABLE product_stocks
+      ALTER COLUMN pos_id DROP NOT NULL;
+  END IF;
+
   -- Add unique constraint if it doesn't exist
   -- Note: This might fail if there are duplicates, which is expected
   BEGIN
-    ALTER TABLE product_stocks 
-      ADD CONSTRAINT unique_product_storage 
-      UNIQUE (product_id, storage_location_id);
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.table_constraints
+      WHERE constraint_name = 'unique_product_storage'
+      AND table_name = 'product_stocks'
+    ) THEN
+      ALTER TABLE product_stocks
+        ADD CONSTRAINT unique_product_storage
+        UNIQUE (product_id, storage_location_id);
+    END IF;
   EXCEPTION
-    WHEN duplicate_table THEN
-      NULL; -- Constraint already exists
     WHEN unique_violation THEN
       RAISE NOTICE 'Warning: Duplicate product+storage entries exist. Manual consolidation needed.';
   END;
@@ -2616,8 +2633,15 @@ COMMENT ON COLUMN inventory_lines.difference IS 'Écart = counted_quantity - exp
     - Pour les matières premières et consommables, seul le `storage_location_id` sera renseigné
 */
 
-ALTER TABLE product_prices 
-ALTER COLUMN sales_point_id DROP NOT NULL;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'product_prices' AND column_name = 'sales_point_id' AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE product_prices ALTER COLUMN sales_point_id DROP NOT NULL;
+  END IF;
+END $$;
 
 
 -- ========================================
@@ -2635,9 +2659,17 @@ ALTER COLUMN sales_point_id DROP NOT NULL;
     - Pour les matières premières, seul le lien avec le dépôt de stockage sera enregistré
 */
 
-ALTER TABLE product_prices 
-ALTER COLUMN selling_price DROP NOT NULL,
-ALTER COLUMN selling_price DROP DEFAULT;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'product_prices' AND column_name = 'selling_price'
+  ) THEN
+    ALTER TABLE product_prices
+    ALTER COLUMN selling_price DROP NOT NULL,
+    ALTER COLUMN selling_price DROP DEFAULT;
+  END IF;
+END $$;
 
 
 -- ========================================
@@ -5914,8 +5946,15 @@ BEGIN
 END $$;
 
 -- Rendre purchase_order_id optionnel
-ALTER TABLE purchase_receptions
-ALTER COLUMN purchase_order_id DROP NOT NULL;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'purchase_receptions' AND column_name = 'purchase_order_id' AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE purchase_receptions ALTER COLUMN purchase_order_id DROP NOT NULL;
+  END IF;
+END $$;
 
 -- Ajouter une contrainte pour s'assurer qu'au moins l'un des deux est renseigné
 DO $$
@@ -5941,8 +5980,15 @@ CREATE INDEX IF NOT EXISTS idx_receptions_supplier ON purchase_receptions(suppli
 -- ============================================================
 
 -- Rendre purchase_order_line_id optionnel pour les réceptions directes
-ALTER TABLE purchase_reception_lines
-ALTER COLUMN purchase_order_line_id DROP NOT NULL;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'purchase_reception_lines' AND column_name = 'purchase_order_line_id' AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE purchase_reception_lines ALTER COLUMN purchase_order_line_id DROP NOT NULL;
+  END IF;
+END $$;
 
 -- ============================================================
 -- 3. RECRÉER LE TRIGGER DE MISE À JOUR DES QUANTITÉS REÇUES
@@ -6067,8 +6113,15 @@ BEGIN
 END $$;
 
 -- Rendre purchase_order_id optionnel
-ALTER TABLE purchase_receptions
-ALTER COLUMN purchase_order_id DROP NOT NULL;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'purchase_receptions' AND column_name = 'purchase_order_id' AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE purchase_receptions ALTER COLUMN purchase_order_id DROP NOT NULL;
+  END IF;
+END $$;
 
 -- Ajouter une contrainte pour s'assurer qu'au moins l'un des deux est renseigné
 DO $$
@@ -6094,8 +6147,15 @@ CREATE INDEX IF NOT EXISTS idx_receptions_supplier ON purchase_receptions(suppli
 -- ============================================================
 
 -- Rendre purchase_order_line_id optionnel pour les réceptions directes
-ALTER TABLE purchase_reception_lines
-ALTER COLUMN purchase_order_line_id DROP NOT NULL;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'purchase_reception_lines' AND column_name = 'purchase_order_line_id' AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE purchase_reception_lines ALTER COLUMN purchase_order_line_id DROP NOT NULL;
+  END IF;
+END $$;
 
 -- ============================================================
 -- 3. RECRÉER LE TRIGGER DE MISE À JOUR DES QUANTITÉS REÇUES
