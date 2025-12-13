@@ -1,6 +1,6 @@
 -- ========================================
 -- ERP Hôtel Casino - Complete Database Migration
--- Generated: Sat Dec 13 18:52:56 UTC 2025
+-- Generated: Sat Dec 13 18:57:25 UTC 2025
 -- Total migrations: 82
 -- ========================================
 
@@ -2452,9 +2452,27 @@ ALTER TABLE stock_movements
 
 -- First, check if we need to consolidate duplicate stocks
 DO $$
+DECLARE
+  constraint_rec RECORD;
 BEGIN
+  -- Find and drop the old unique constraint on (product_id, pos_id) if it exists
+  FOR constraint_rec IN
+    SELECT tc.constraint_name
+    FROM information_schema.table_constraints tc
+    JOIN information_schema.key_column_usage kcu
+      ON tc.constraint_name = kcu.constraint_name
+      AND tc.table_schema = kcu.table_schema
+    WHERE tc.table_name = 'product_stocks'
+      AND tc.constraint_type = 'UNIQUE'
+      AND kcu.column_name IN ('product_id', 'pos_id')
+    GROUP BY tc.constraint_name
+    HAVING COUNT(*) = 2
+  LOOP
+    EXECUTE format('ALTER TABLE product_stocks DROP CONSTRAINT IF EXISTS %I', constraint_rec.constraint_name);
+  END LOOP;
+
   -- Make pos_id nullable
-  ALTER TABLE product_stocks 
+  ALTER TABLE product_stocks
     ALTER COLUMN pos_id DROP NOT NULL;
   
   -- Add unique constraint if it doesn't exist
