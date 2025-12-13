@@ -872,6 +872,7 @@ CREATE POLICY "Allow all operations on product_stocks"
     - `id` (uuid, primary key)
     - `name` (text) - Nom du dépôt (ex: "Bar Jardin")
     - `code` (text, unique) - Code court (ex: "BAR-JAR")
+    - `type` (text, NOT NULL, DEFAULT 'main_warehouse') - Type de dépôt
     - `description` (text) - Description optionnelle
     - `is_active` (boolean) - Statut actif/inactif
     - `created_at` (timestamptz)
@@ -894,11 +895,24 @@ CREATE TABLE IF NOT EXISTS storage_locations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   code text UNIQUE NOT NULL,
+  type text NOT NULL DEFAULT 'main_warehouse',
   description text DEFAULT '',
   is_active boolean DEFAULT true,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
+
+-- Add type column if it doesn't exist (for existing tables)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'storage_locations' AND column_name = 'type'
+  ) THEN
+    ALTER TABLE storage_locations
+      ADD COLUMN type text NOT NULL DEFAULT 'main_warehouse';
+  END IF;
+END $$;
 
 -- Add storage_location_id to product_stocks
 DO $$
