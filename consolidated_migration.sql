@@ -2071,6 +2071,18 @@ BEGIN
   END IF;
 END $$;
 
+-- Rendre display_name nullable si elle existe
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'restaurant_tables' AND column_name = 'display_name'
+  ) THEN
+    ALTER TABLE restaurant_tables ALTER COLUMN display_name DROP NOT NULL;
+    ALTER TABLE restaurant_tables ALTER COLUMN display_name SET DEFAULT '';
+  END IF;
+END $$;
+
 -- Création de la table des transferts de table
 CREATE TABLE IF NOT EXISTS table_transfers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
