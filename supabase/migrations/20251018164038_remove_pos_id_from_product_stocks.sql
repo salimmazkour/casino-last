@@ -53,14 +53,22 @@ BEGIN
   
   -- Add unique constraint if it doesn't exist
   -- Note: This might fail if there are duplicates, which is expected
-  BEGIN
-    ALTER TABLE product_stocks 
-      ADD CONSTRAINT unique_product_storage 
-      UNIQUE (product_id, storage_location_id);
-  EXCEPTION
-    WHEN duplicate_table THEN
-      NULL; -- Constraint already exists
-    WHEN unique_violation THEN
-      RAISE NOTICE 'Warning: Duplicate product+storage entries exist. Manual consolidation needed.';
-  END;
+  -- First check if storage_location_id column exists
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'product_stocks' AND column_name = 'storage_location_id'
+  ) THEN
+    BEGIN
+      ALTER TABLE product_stocks
+        ADD CONSTRAINT unique_product_storage
+        UNIQUE (product_id, storage_location_id);
+    EXCEPTION
+      WHEN duplicate_table THEN
+        NULL; -- Constraint already exists
+      WHEN unique_violation THEN
+        RAISE NOTICE 'Warning: Duplicate product+storage entries exist. Manual consolidation needed.';
+    END;
+  ELSE
+    RAISE NOTICE 'Warning: storage_location_id column does not exist in product_stocks. Skipping constraint creation.';
+  END IF;
 END $$;

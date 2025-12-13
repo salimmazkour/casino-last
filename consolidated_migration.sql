@@ -1,6 +1,6 @@
 -- ========================================
 -- ERP Hôtel Casino - Complete Database Migration
--- Generated: Sat Dec 13 19:04:59 UTC 2025
+-- Generated: Sat Dec 13 19:10:35 UTC 2025
 -- Total migrations: 82
 -- ========================================
 
@@ -2509,16 +2509,24 @@ BEGIN
   
   -- Add unique constraint if it doesn't exist
   -- Note: This might fail if there are duplicates, which is expected
-  BEGIN
-    ALTER TABLE product_stocks 
-      ADD CONSTRAINT unique_product_storage 
-      UNIQUE (product_id, storage_location_id);
-  EXCEPTION
-    WHEN duplicate_table THEN
-      NULL; -- Constraint already exists
-    WHEN unique_violation THEN
-      RAISE NOTICE 'Warning: Duplicate product+storage entries exist. Manual consolidation needed.';
-  END;
+  -- First check if storage_location_id column exists
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'product_stocks' AND column_name = 'storage_location_id'
+  ) THEN
+    BEGIN
+      ALTER TABLE product_stocks
+        ADD CONSTRAINT unique_product_storage
+        UNIQUE (product_id, storage_location_id);
+    EXCEPTION
+      WHEN duplicate_table THEN
+        NULL; -- Constraint already exists
+      WHEN unique_violation THEN
+        RAISE NOTICE 'Warning: Duplicate product+storage entries exist. Manual consolidation needed.';
+    END;
+  ELSE
+    RAISE NOTICE 'Warning: storage_location_id column does not exist in product_stocks. Skipping constraint creation.';
+  END IF;
 END $$;
 
 -- ========================================
