@@ -1,7 +1,7 @@
 -- ========================================
 -- ERP Hôtel Casino - Complete Database Migration
--- Generated: Sat Dec 13 19:13:31 UTC 2025
--- Total migrations: 82
+-- Generated: Sat Dec 13 19:18:50 UTC 2025
+-- Total migrations: 83
 -- ========================================
 
 
@@ -4723,14 +4723,14 @@ EXECUTE FUNCTION create_stock_movement_on_reception();
 
   1. Nouvelle Fonction
     - `update_product_stocks_from_movement()` - Met à jour automatiquement product_stocks quand un mouvement est créé
-    
+
   2. Comportement
     - Lors d'un INSERT dans stock_movements, met à jour ou crée l'enregistrement dans product_stocks
     - Calcule la quantité totale basée sur tous les mouvements pour ce produit/dépôt
-    - Types de mouvements : 
+    - Types de mouvements :
       - 'purchase', 'transfer_in', 'adjustment_in' → augmentent le stock
       - 'sale', 'breakage', 'expired', 'transfer_out', 'adjustment_out' → diminuent le stock
-    
+
   3. Sécurité
     - Met à jour updated_at automatiquement
     - Crée l'enregistrement s'il n'existe pas
@@ -4739,59 +4739,74 @@ EXECUTE FUNCTION create_stock_movement_on_reception();
   4. Important
     - Ce trigger s'exécute APRÈS chaque insertion dans stock_movements
     - Il garantit que product_stocks reflète toujours la réalité des mouvements
+    - PREREQUIS: La colonne storage_location_id doit exister dans product_stocks
 */
 
--- Fonction pour mettre à jour product_stocks à partir des mouvements
-CREATE OR REPLACE FUNCTION update_product_stocks_from_movement()
-RETURNS TRIGGER AS $$
-DECLARE
-  total_quantity NUMERIC;
+-- Vérifier que la colonne storage_location_id existe avant de créer la fonction
+DO $$
 BEGIN
-  -- Calculer la quantité totale pour ce produit dans ce dépôt
-  -- en additionnant tous les mouvements
-  SELECT COALESCE(
-    SUM(
-      CASE 
-        -- Mouvements qui augmentent le stock
-        WHEN movement_type IN ('purchase', 'transfer_in', 'adjustment_in') THEN quantity
-        -- Mouvements qui diminuent le stock
-        WHEN movement_type IN ('sale', 'breakage', 'expired', 'transfer_out', 'adjustment_out') THEN -quantity
-        ELSE 0
-      END
-    ), 0
-  )
-  INTO total_quantity
-  FROM stock_movements
-  WHERE product_id = NEW.product_id
-    AND storage_location_id = NEW.storage_location_id;
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'product_stocks' AND column_name = 'storage_location_id'
+  ) THEN
+    RAISE NOTICE 'ATTENTION: La colonne storage_location_id n''existe pas dans product_stocks. La fonction et le trigger ne seront pas créés.';
+    RETURN;
+  END IF;
 
-  -- Insérer ou mettre à jour product_stocks
-  INSERT INTO product_stocks (
-    product_id,
-    storage_location_id,
-    quantity,
-    updated_at
-  ) VALUES (
-    NEW.product_id,
-    NEW.storage_location_id,
-    total_quantity,
-    NOW()
-  )
-  ON CONFLICT (product_id, storage_location_id)
-  DO UPDATE SET
-    quantity = EXCLUDED.quantity,
-    updated_at = NOW();
+  -- Fonction pour mettre à jour product_stocks à partir des mouvements
+  CREATE OR REPLACE FUNCTION update_product_stocks_from_movement()
+  RETURNS TRIGGER AS $func$
+  DECLARE
+    total_quantity NUMERIC;
+  BEGIN
+    -- Calculer la quantité totale pour ce produit dans ce dépôt
+    -- en additionnant tous les mouvements
+    SELECT COALESCE(
+      SUM(
+        CASE
+          -- Mouvements qui augmentent le stock
+          WHEN movement_type IN ('purchase', 'transfer_in', 'adjustment_in') THEN quantity
+          -- Mouvements qui diminuent le stock
+          WHEN movement_type IN ('sale', 'breakage', 'expired', 'transfer_out', 'adjustment_out') THEN -quantity
+          ELSE 0
+        END
+      ), 0
+    )
+    INTO total_quantity
+    FROM stock_movements
+    WHERE product_id = NEW.product_id
+      AND storage_location_id = NEW.storage_location_id;
 
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+    -- Insérer ou mettre à jour product_stocks
+    INSERT INTO product_stocks (
+      product_id,
+      storage_location_id,
+      quantity,
+      updated_at
+    ) VALUES (
+      NEW.product_id,
+      NEW.storage_location_id,
+      total_quantity,
+      NOW()
+    )
+    ON CONFLICT (product_id, storage_location_id)
+    DO UPDATE SET
+      quantity = EXCLUDED.quantity,
+      updated_at = NOW();
 
--- Créer le trigger sur stock_movements
-DROP TRIGGER IF EXISTS trigger_update_product_stocks ON stock_movements;
-CREATE TRIGGER trigger_update_product_stocks
-AFTER INSERT ON stock_movements
-FOR EACH ROW
-EXECUTE FUNCTION update_product_stocks_from_movement();
+    RETURN NEW;
+  END;
+  $func$ LANGUAGE plpgsql;
+
+  -- Créer le trigger sur stock_movements
+  DROP TRIGGER IF EXISTS trigger_update_product_stocks ON stock_movements;
+  CREATE TRIGGER trigger_update_product_stocks
+  AFTER INSERT ON stock_movements
+  FOR EACH ROW
+  EXECUTE FUNCTION update_product_stocks_from_movement();
+
+  RAISE NOTICE 'Fonction et trigger update_product_stocks_from_movement créés avec succès';
+END $$;
 
 -- Ajouter une contrainte unique si elle n'existe pas déjà
 DO $$
@@ -6695,3 +6710,14 @@ CREATE TRIGGER update_product_option_assignments_updated_at
   BEFORE UPDATE ON product_option_group_assignments
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+-- ========================================
+-- Migration: consolidated_migration.sql
+-- ========================================
+-- ========================================
+-- ERP Hôtel Casino - Complete Database Migration
+-- Generated: Sat Dec 13 19:18:45 UTC 2025
+-- Total migrations: 0
+-- ========================================
+
+
