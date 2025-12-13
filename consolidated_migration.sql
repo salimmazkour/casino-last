@@ -1702,6 +1702,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_set_client_number ON clients;
+
 CREATE TRIGGER trigger_set_client_number
   BEFORE INSERT OR UPDATE ON clients
   FOR EACH ROW
