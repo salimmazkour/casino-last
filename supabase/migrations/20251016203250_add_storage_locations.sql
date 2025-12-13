@@ -39,6 +39,17 @@ CREATE TABLE IF NOT EXISTS storage_locations (
   updated_at timestamptz DEFAULT now()
 );
 
+-- Drop the 'type' column if it exists (cleanup from manual changes)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'storage_locations' AND column_name = 'type'
+  ) THEN
+    ALTER TABLE storage_locations DROP COLUMN type;
+  END IF;
+END $$;
+
 -- Add storage_location_id to product_stocks
 DO $$
 BEGIN
