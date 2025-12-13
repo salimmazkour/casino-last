@@ -77,22 +77,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Créer le trigger si il n'existe pas déjà
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_trigger WHERE tgname = 'trigger_set_client_number'
-  ) THEN
-    CREATE TRIGGER trigger_set_client_number
-      BEFORE INSERT ON clients
-      FOR EACH ROW
-      EXECUTE FUNCTION set_client_number();
-    
-    RAISE NOTICE 'Trigger trigger_set_client_number créé';
-  ELSE
-    RAISE NOTICE 'Le trigger trigger_set_client_number existe déjà';
-  END IF;
-END $$;
+-- Créer le trigger (supprimer d'abord si existant pour éviter les erreurs)
+DROP TRIGGER IF EXISTS trigger_set_client_number ON clients;
+
+CREATE TRIGGER trigger_set_client_number
+  BEFORE INSERT ON clients
+  FOR EACH ROW
+  EXECUTE FUNCTION set_client_number();
 
 -- Créer l'index pour optimiser les recherches par numéro client
 CREATE INDEX IF NOT EXISTS idx_clients_client_number ON clients(client_number);
