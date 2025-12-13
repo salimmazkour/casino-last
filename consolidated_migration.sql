@@ -2241,129 +2241,169 @@ END $$;
     - Position coordinates set to 0 for now (can be adjusted via UI)
 */
 
--- Bar Machines à Sous (62ee39b6-4c4f-4174-a292-6c024047b456)
+-- Bar Machines à Sous
 DO $$
 DECLARE
   table_num INT;
+  sp_id UUID;
 BEGIN
-  FOR table_num IN 1..100 LOOP
-    IF table_num != 13 THEN
-      INSERT INTO restaurant_tables (sales_point_id, table_number, capacity, zone, status, position_x, position_y)
-      VALUES (
-        '62ee39b6-4c4f-4174-a292-6c024047b456',
-        'Table ' || table_num,
-        4,
-        CASE
-          WHEN table_num <= 30 THEN 'Intérieur'
-          WHEN table_num <= 60 THEN 'Terrasse'
-          ELSE 'VIP'
-        END,
-        'available',
-        0,
-        0
-      );
-    END IF;
-  END LOOP;
+  -- Récupérer l'ID du point de vente
+  SELECT id INTO sp_id FROM sales_points WHERE name = 'Bar Machines à Sous';
+
+  -- N'insérer que si le point de vente existe
+  IF sp_id IS NOT NULL THEN
+    FOR table_num IN 1..100 LOOP
+      IF table_num != 13 THEN
+        INSERT INTO restaurant_tables (sales_point_id, table_number, capacity, zone, status, position_x, position_y)
+        VALUES (
+          sp_id,
+          'Table ' || table_num,
+          4,
+          CASE
+            WHEN table_num <= 30 THEN 'Intérieur'
+            WHEN table_num <= 60 THEN 'Terrasse'
+            ELSE 'VIP'
+          END,
+          'available',
+          0,
+          0
+        )
+        ON CONFLICT (sales_point_id, table_number) DO NOTHING;
+      END IF;
+    END LOOP;
+  END IF;
 END $$;
 
--- Bar Salle de Jeux Traditionnels (d1ee3272-7bc7-4f90-af3f-30d09dfd22dc)
+-- Bar Salle de Jeux Traditionnels
 DO $$
 DECLARE
   table_num INT;
+  sp_id UUID;
 BEGIN
-  FOR table_num IN 1..100 LOOP
-    IF table_num != 13 THEN
-      INSERT INTO restaurant_tables (sales_point_id, table_number, capacity, zone, status, position_x, position_y)
-      VALUES (
-        'd1ee3272-7bc7-4f90-af3f-30d09dfd22dc',
-        'Table ' || table_num,
-        4,
-        CASE
-          WHEN table_num <= 30 THEN 'Intérieur'
-          WHEN table_num <= 60 THEN 'Terrasse'
-          ELSE 'VIP'
-        END,
-        'available',
-        0,
-        0
-      );
-    END IF;
-  END LOOP;
+  -- Récupérer l'ID du point de vente
+  SELECT id INTO sp_id FROM sales_points WHERE name = 'Bar Salle de Jeux Traditionnels';
+
+  -- N'insérer que si le point de vente existe
+  IF sp_id IS NOT NULL THEN
+    FOR table_num IN 1..100 LOOP
+      IF table_num != 13 THEN
+        INSERT INTO restaurant_tables (sales_point_id, table_number, capacity, zone, status, position_x, position_y)
+        VALUES (
+          sp_id,
+          'Table ' || table_num,
+          4,
+          CASE
+            WHEN table_num <= 30 THEN 'Intérieur'
+            WHEN table_num <= 60 THEN 'Terrasse'
+            ELSE 'VIP'
+          END,
+          'available',
+          0,
+          0
+        )
+        ON CONFLICT (sales_point_id, table_number) DO NOTHING;
+      END IF;
+    END LOOP;
+  END IF;
 END $$;
 
--- Boîte de Nuit Seven (d06c4500-fa56-4585-97de-7766fb893494)
+-- Boîte de Nuit Seven
 DO $$
 DECLARE
   table_num INT;
+  sp_id UUID;
 BEGIN
-  FOR table_num IN 1..100 LOOP
-    IF table_num != 13 THEN
-      INSERT INTO restaurant_tables (sales_point_id, table_number, capacity, zone, status, position_x, position_y)
-      VALUES (
-        'd06c4500-fa56-4585-97de-7766fb893494',
-        'Table ' || table_num,
-        4,
-        CASE
-          WHEN table_num <= 30 THEN 'Intérieur'
-          WHEN table_num <= 60 THEN 'Terrasse'
-          ELSE 'VIP'
-        END,
-        'available',
-        0,
-        0
-      );
-    END IF;
-  END LOOP;
+  -- Récupérer l'ID du point de vente
+  SELECT id INTO sp_id FROM sales_points WHERE name = 'Boîte de Nuit Seven';
+
+  -- N'insérer que si le point de vente existe
+  IF sp_id IS NOT NULL THEN
+    FOR table_num IN 1..100 LOOP
+      IF table_num != 13 THEN
+        INSERT INTO restaurant_tables (sales_point_id, table_number, capacity, zone, status, position_x, position_y)
+        VALUES (
+          sp_id,
+          'Table ' || table_num,
+          4,
+          CASE
+            WHEN table_num <= 30 THEN 'Intérieur'
+            WHEN table_num <= 60 THEN 'Terrasse'
+            ELSE 'VIP'
+          END,
+          'available',
+          0,
+          0
+        )
+        ON CONFLICT (sales_point_id, table_number) DO NOTHING;
+      END IF;
+    END LOOP;
+  END IF;
 END $$;
 
--- Restaurant Le Jardin (2601da89-2837-43f8-a316-dbf1476c3dd2)
+-- Restaurant Le Jardin
 DO $$
 DECLARE
   table_num INT;
+  sp_id UUID;
 BEGIN
-  FOR table_num IN 1..100 LOOP
-    IF table_num != 13 THEN
-      INSERT INTO restaurant_tables (sales_point_id, table_number, capacity, zone, status, position_x, position_y)
-      VALUES (
-        '2601da89-2837-43f8-a316-dbf1476c3dd2',
-        'Table ' || table_num,
-        4,
-        CASE
-          WHEN table_num <= 30 THEN 'Intérieur'
-          WHEN table_num <= 60 THEN 'Terrasse'
-          ELSE 'VIP'
-        END,
-        'available',
-        0,
-        0
-      );
-    END IF;
-  END LOOP;
+  -- Récupérer l'ID du point de vente
+  SELECT id INTO sp_id FROM sales_points WHERE name = 'Restaurant Le Jardin';
+
+  -- N'insérer que si le point de vente existe
+  IF sp_id IS NOT NULL THEN
+    FOR table_num IN 1..100 LOOP
+      IF table_num != 13 THEN
+        INSERT INTO restaurant_tables (sales_point_id, table_number, capacity, zone, status, position_x, position_y)
+        VALUES (
+          sp_id,
+          'Table ' || table_num,
+          4,
+          CASE
+            WHEN table_num <= 30 THEN 'Intérieur'
+            WHEN table_num <= 60 THEN 'Terrasse'
+            ELSE 'VIP'
+          END,
+          'available',
+          0,
+          0
+        )
+        ON CONFLICT (sales_point_id, table_number) DO NOTHING;
+      END IF;
+    END LOOP;
+  END IF;
 END $$;
 
--- Restaurant Seven Seven (f9cf6765-7478-419d-bd8f-51be1104309c)
+-- Restaurant Seven Seven
 DO $$
 DECLARE
   table_num INT;
+  sp_id UUID;
 BEGIN
-  FOR table_num IN 1..100 LOOP
-    IF table_num != 13 THEN
-      INSERT INTO restaurant_tables (sales_point_id, table_number, capacity, zone, status, position_x, position_y)
-      VALUES (
-        'f9cf6765-7478-419d-bd8f-51be1104309c',
-        'Table ' || table_num,
-        4,
-        CASE
-          WHEN table_num <= 30 THEN 'Intérieur'
-          WHEN table_num <= 60 THEN 'Terrasse'
-          ELSE 'VIP'
-        END,
-        'available',
-        0,
-        0
-      );
-    END IF;
-  END LOOP;
+  -- Récupérer l'ID du point de vente
+  SELECT id INTO sp_id FROM sales_points WHERE name = 'Restaurant Seven Seven';
+
+  -- N'insérer que si le point de vente existe
+  IF sp_id IS NOT NULL THEN
+    FOR table_num IN 1..100 LOOP
+      IF table_num != 13 THEN
+        INSERT INTO restaurant_tables (sales_point_id, table_number, capacity, zone, status, position_x, position_y)
+        VALUES (
+          sp_id,
+          'Table ' || table_num,
+          4,
+          CASE
+            WHEN table_num <= 30 THEN 'Intérieur'
+            WHEN table_num <= 60 THEN 'Terrasse'
+            ELSE 'VIP'
+          END,
+          'available',
+          0,
+          0
+        )
+        ON CONFLICT (sales_point_id, table_number) DO NOTHING;
+      END IF;
+    END LOOP;
+  END IF;
 END $$;
 
 
