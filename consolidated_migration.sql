@@ -1,6 +1,6 @@
 -- ========================================
 -- ERP Hôtel Casino - Complete Database Migration
--- Generated: Sat Dec 13 18:59:25 UTC 2025
+-- Generated: Sat Dec 13 19:01:48 UTC 2025
 -- Total migrations: 82
 -- ========================================
 
@@ -611,7 +611,18 @@ CREATE INDEX IF NOT EXISTS idx_printers_pos ON printers(pos_id);
 CREATE INDEX IF NOT EXISTS idx_product_recipes_product ON product_recipes(product_id);
 CREATE INDEX IF NOT EXISTS idx_product_recipes_ingredient ON product_recipes(ingredient_id);
 CREATE INDEX IF NOT EXISTS idx_product_stocks_product ON product_stocks(product_id);
-CREATE INDEX IF NOT EXISTS idx_product_stocks_pos ON product_stocks(pos_id);
+
+-- Create index on pos_id only if the column exists
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'product_stocks' AND column_name = 'pos_id'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_product_stocks_pos ON product_stocks(pos_id);
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_products_printer ON products(printer_id);
 
 -- RLS (Row Level Security)
