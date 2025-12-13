@@ -911,6 +911,13 @@ BEGIN
   ) THEN
     ALTER TABLE storage_locations
       ADD COLUMN type text NOT NULL DEFAULT 'main_warehouse';
+  ELSE
+    -- If column exists, ensure it has a default value
+    ALTER TABLE storage_locations
+      ALTER COLUMN type SET DEFAULT 'main_warehouse';
+
+    -- Update any NULL values to default
+    UPDATE storage_locations SET type = 'main_warehouse' WHERE type IS NULL;
   END IF;
 END $$;
 
