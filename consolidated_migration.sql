@@ -1666,6 +1666,17 @@ CREATE TABLE IF NOT EXISTS clients (
   updated_at timestamptz DEFAULT now()
 );
 
+-- Ajouter la colonne type si elle n'existe pas
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'clients' AND column_name = 'type'
+  ) THEN
+    ALTER TABLE clients ADD COLUMN type text NOT NULL DEFAULT 'individual' CHECK (type IN ('individual', 'company'));
+  END IF;
+END $$;
+
 -- Créer un index sur le numéro client
 CREATE INDEX IF NOT EXISTS idx_clients_client_number ON clients(client_number);
 CREATE INDEX IF NOT EXISTS idx_clients_email ON clients(email);
