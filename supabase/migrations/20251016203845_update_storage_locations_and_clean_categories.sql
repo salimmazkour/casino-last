@@ -20,8 +20,8 @@
   - Conservation d'une seule version de chaque catégorie
 */
 
--- Delete old storage locations
-DELETE FROM storage_locations;
+-- Delete old storage locations (using TRUNCATE CASCADE to handle foreign key references)
+TRUNCATE storage_locations CASCADE;
 
 -- Insert new storage locations
 INSERT INTO storage_locations (name, code, description) VALUES
