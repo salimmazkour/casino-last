@@ -547,13 +547,13 @@ WHERE login = 'admin';
   - `created_at` (timestamptz)
 
   ### 3. product_stocks
-  Stocks par point de vente
+  Stocks par emplacement de stockage
   - `id` (uuid, PK)
   - `product_id` (uuid)
-  - `pos_id` (uuid) - Point de vente (sales_points)
   - `quantity` (decimal) - Quantité en stock
   - `last_inventory_date` (timestamptz)
   - `updated_at` (timestamptz)
+  - Note: storage_location_id sera ajouté dans une migration ultérieure
 
   ## Modifications tables existantes
   
@@ -589,11 +589,9 @@ CREATE TABLE IF NOT EXISTS product_recipes (
 CREATE TABLE IF NOT EXISTS product_stocks (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-  pos_id uuid NOT NULL REFERENCES sales_points(id) ON DELETE CASCADE,
   quantity decimal(10,2) DEFAULT 0,
   last_inventory_date timestamptz,
-  updated_at timestamptz DEFAULT now(),
-  UNIQUE(product_id, pos_id)
+  updated_at timestamptz DEFAULT now()
 );
 
 -- Ajout de colonnes manquantes à products si elles n'existent pas
@@ -619,7 +617,6 @@ CREATE INDEX IF NOT EXISTS idx_printers_pos ON printers(pos_id);
 CREATE INDEX IF NOT EXISTS idx_product_recipes_product ON product_recipes(product_id);
 CREATE INDEX IF NOT EXISTS idx_product_recipes_ingredient ON product_recipes(ingredient_id);
 CREATE INDEX IF NOT EXISTS idx_product_stocks_product ON product_stocks(product_id);
-CREATE INDEX IF NOT EXISTS idx_product_stocks_pos ON product_stocks(pos_id);
 CREATE INDEX IF NOT EXISTS idx_products_printer ON products(printer_id);
 
 -- RLS (Row Level Security)
@@ -910,8 +907,22 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'product_stocks' AND column_name = 'storage_location_id'
   ) THEN
-    ALTER TABLE product_stocks 
+    ALTER TABLE product_stocks
     ADD COLUMN storage_location_id uuid REFERENCES storage_locations(id) ON DELETE CASCADE;
+  END IF;
+END $$;
+
+-- Add unique constraint on (product_id, storage_location_id)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints
+    WHERE constraint_name = 'unique_product_storage'
+    AND table_name = 'product_stocks'
+  ) THEN
+    ALTER TABLE product_stocks
+      ADD CONSTRAINT unique_product_storage
+      UNIQUE (product_id, storage_location_id);
   END IF;
 END $$;
 
@@ -2458,35 +2469,10 @@ ALTER TABLE stock_movements
     - If there are duplicate entries for same product+storage, we'll need to manually consolidate later
 */
 
--- First, check if we need to consolidate duplicate stocks
-DO $$
-BEGIN
-  -- Make pos_id nullable (only if column exists)
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'product_stocks' AND column_name = 'pos_id'
-  ) THEN
-    ALTER TABLE product_stocks
-      ALTER COLUMN pos_id DROP NOT NULL;
-  END IF;
-
-  -- Add unique constraint if it doesn't exist
-  -- Note: This might fail if there are duplicates, which is expected
-  BEGIN
-    IF NOT EXISTS (
-      SELECT 1 FROM information_schema.table_constraints
-      WHERE constraint_name = 'unique_product_storage'
-      AND table_name = 'product_stocks'
-    ) THEN
-      ALTER TABLE product_stocks
-        ADD CONSTRAINT unique_product_storage
-        UNIQUE (product_id, storage_location_id);
-    END IF;
-  EXCEPTION
-    WHEN unique_violation THEN
-      RAISE NOTICE 'Warning: Duplicate product+storage entries exist. Manual consolidation needed.';
-  END;
-END $$;
+-- Note: pos_id column no longer exists in product_stocks table
+-- The table was created with only storage_location_id
+-- The unique constraint on (product_id, storage_location_id) has already been added
+-- This migration is kept for reference but no action needed
 
 -- ========================================
 -- Migration: 20251018164243_add_default_storage_to_sales_points.sql
