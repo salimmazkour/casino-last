@@ -2958,6 +2958,28 @@ CREATE TABLE IF NOT EXISTS roles (
   created_at timestamptz DEFAULT now()
 );
 
+-- Ajout de la colonne level si elle n'existe pas
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'roles' AND column_name = 'level'
+  ) THEN
+    ALTER TABLE roles ADD COLUMN level integer NOT NULL DEFAULT 3;
+  END IF;
+END $$;
+
+-- Ajout de la colonne is_active si elle n'existe pas
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'roles' AND column_name = 'is_active'
+  ) THEN
+    ALTER TABLE roles ADD COLUMN is_active boolean DEFAULT true;
+  END IF;
+END $$;
+
 ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Authenticated users can view roles"
