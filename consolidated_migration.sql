@@ -2046,7 +2046,7 @@ CREATE TABLE IF NOT EXISTS restaurant_tables (
   UNIQUE(sales_point_id, table_number)
 );
 
--- Ajouter la colonne zone si elle n'existe pas
+-- Ajouter les colonnes manquantes à restaurant_tables
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -2054,6 +2054,20 @@ BEGIN
     WHERE table_name = 'restaurant_tables' AND column_name = 'zone'
   ) THEN
     ALTER TABLE restaurant_tables ADD COLUMN zone text DEFAULT 'main';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'restaurant_tables' AND column_name = 'position_x'
+  ) THEN
+    ALTER TABLE restaurant_tables ADD COLUMN position_x numeric DEFAULT 0;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'restaurant_tables' AND column_name = 'position_y'
+  ) THEN
+    ALTER TABLE restaurant_tables ADD COLUMN position_y numeric DEFAULT 0;
   END IF;
 END $$;
 
