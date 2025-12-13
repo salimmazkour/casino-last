@@ -1,6 +1,6 @@
 -- ========================================
 -- ERP Hôtel Casino - Complete Database Migration
--- Generated: Sat Dec 13 19:10:35 UTC 2025
+-- Generated: Sat Dec 13 19:13:31 UTC 2025
 -- Total migrations: 82
 -- ========================================
 
@@ -952,11 +952,26 @@ CREATE POLICY "Allow all operations on storage_locations"
   WITH CHECK (true);
 
 -- Create index for better performance
-CREATE INDEX IF NOT EXISTS idx_product_stocks_storage_location 
-  ON product_stocks(storage_location_id);
+DO $$
+BEGIN
+  -- Index sur product_stocks.storage_location_id seulement si la colonne existe
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'product_stocks' AND column_name = 'storage_location_id'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_product_stocks_storage_location
+      ON product_stocks(storage_location_id);
+  END IF;
 
-CREATE INDEX IF NOT EXISTS idx_products_storage_location 
-  ON products(storage_location_id);
+  -- Index sur products.storage_location_id seulement si la colonne existe
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'products' AND column_name = 'storage_location_id'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_products_storage_location
+      ON products(storage_location_id);
+  END IF;
+END $$;
 
 
 -- ========================================
@@ -4781,13 +4796,22 @@ EXECUTE FUNCTION update_product_stocks_from_movement();
 -- Ajouter une contrainte unique si elle n'existe pas déjà
 DO $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint 
-    WHERE conname = 'product_stocks_product_storage_unique'
+  -- Vérifier d'abord que la colonne storage_location_id existe
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'product_stocks' AND column_name = 'storage_location_id'
   ) THEN
-    ALTER TABLE product_stocks
-    ADD CONSTRAINT product_stocks_product_storage_unique 
-    UNIQUE (product_id, storage_location_id);
+    -- Ensuite vérifier si la contrainte n'existe pas déjà
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_constraint
+      WHERE conname = 'product_stocks_product_storage_unique'
+    ) THEN
+      ALTER TABLE product_stocks
+      ADD CONSTRAINT product_stocks_product_storage_unique
+      UNIQUE (product_id, storage_location_id);
+    END IF;
+  ELSE
+    RAISE NOTICE 'La colonne storage_location_id n''existe pas encore dans product_stocks';
   END IF;
 END $$;
 

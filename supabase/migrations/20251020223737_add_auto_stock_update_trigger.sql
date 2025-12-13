@@ -76,12 +76,21 @@ EXECUTE FUNCTION update_product_stocks_from_movement();
 -- Ajouter une contrainte unique si elle n'existe pas déjà
 DO $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint 
-    WHERE conname = 'product_stocks_product_storage_unique'
+  -- Vérifier d'abord que la colonne storage_location_id existe
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'product_stocks' AND column_name = 'storage_location_id'
   ) THEN
-    ALTER TABLE product_stocks
-    ADD CONSTRAINT product_stocks_product_storage_unique 
-    UNIQUE (product_id, storage_location_id);
+    -- Ensuite vérifier si la contrainte n'existe pas déjà
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_constraint
+      WHERE conname = 'product_stocks_product_storage_unique'
+    ) THEN
+      ALTER TABLE product_stocks
+      ADD CONSTRAINT product_stocks_product_storage_unique
+      UNIQUE (product_id, storage_location_id);
+    END IF;
+  ELSE
+    RAISE NOTICE 'La colonne storage_location_id n''existe pas encore dans product_stocks';
   END IF;
 END $$;

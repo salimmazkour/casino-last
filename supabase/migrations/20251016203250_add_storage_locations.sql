@@ -85,8 +85,23 @@ CREATE POLICY "Allow all operations on storage_locations"
   WITH CHECK (true);
 
 -- Create index for better performance
-CREATE INDEX IF NOT EXISTS idx_product_stocks_storage_location 
-  ON product_stocks(storage_location_id);
+DO $$
+BEGIN
+  -- Index sur product_stocks.storage_location_id seulement si la colonne existe
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'product_stocks' AND column_name = 'storage_location_id'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_product_stocks_storage_location
+      ON product_stocks(storage_location_id);
+  END IF;
 
-CREATE INDEX IF NOT EXISTS idx_products_storage_location 
-  ON products(storage_location_id);
+  -- Index sur products.storage_location_id seulement si la colonne existe
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'products' AND column_name = 'storage_location_id'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_products_storage_location
+      ON products(storage_location_id);
+  END IF;
+END $$;
